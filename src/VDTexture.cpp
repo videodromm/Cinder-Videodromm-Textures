@@ -47,17 +47,19 @@ namespace VideoDromm {
 
 		//
 		if (isOK) {
-			// get first profile
+
 			XmlTree texturesXml = doc.getChild("textures");
 
 			// iterate textures
 			for (XmlTree::ConstIter child = texturesXml.begin("texture"); child != texturesXml.end(); ++child) {
 
-				// create warp of the correct type
+				// create texture of the correct type
 				std::string texturetype = child->getAttributeValue<std::string>("texturetype", "unknown");
 				std::string filepath = child->getAttributeValue<std::string>("filepath", "");
 				if (texturetype == "image") {
 					TextureImageRef t(new TextureImage(filepath));
+					// TODO t->fromXml(child->);
+					t->mType = IMAGE;
 					vdtexturelist.push_back(t);
 				}
 				else if (texturetype == "text") {
@@ -73,8 +75,9 @@ namespace VideoDromm {
 
 		return vdtexturelist;
 	}
+
 	void VDTexture::writeSettings(const VDTextureList &vdtexturelist, const ci::DataTargetRef &target) {
-		// create default <profile> (profiles are not yet supported)
+
 		// create config document and root <textures>
 		XmlTree			doc;
 		doc.setTag("textures");
@@ -94,7 +97,8 @@ namespace VideoDromm {
 			case MOVIE: texture.setAttribute("texturetype", "movie"); break;
 			default: texture.setAttribute("texturetype", "unknown"); break;
 			}
-			// add texture to profile
+			// add texture doc
+			texture.setAttribute("filepath", vdtexturelist[i]->mFilePathOrText); 
 			doc.push_back(texture);
 		}
 
@@ -129,10 +133,25 @@ namespace VideoDromm {
 	ci::gl::TextureRef VDTexture::getTexture() {
 		return mTexture;
 	}
-	// child classes
+	// --------- child classes
 	TextureImage::TextureImage(const std::string &filepath) {
 
+		fs::path fullPath = getAssetPath("") / filepath;// TODO / mVDSettings->mAssetsPath
+		if (fs::exists(fullPath)) {
+			mFilePathOrText = filepath; // save the existing file path
+			mTexture = ci::gl::Texture::create(loadImage(loadAsset(mFilePathOrText)), ci::gl::Texture::Format().loadTopDown(mTopDown));		
+		}
+		else {
+			mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
+		}
 	}
+	/*void TextureImage::fromXml(const XmlTree &xml)
+	{
+		// TODO create xml loading of specific attributes for all texturs
+		// retrieve attributes global to all types of texture
+		//mSomething = xml.getAttributeValue<int>("so", 16);
+
+	}*/
 	ci::gl::Texture2dRef TextureImage::getTexture() {
 		return mTexture;
 	}

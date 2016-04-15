@@ -1,24 +1,30 @@
 #pragma once
 
+#include "cinder/app/App.h"
+#include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
+#include "cinder/Xml.h"
 
 #include <atomic>
 #include <vector>
 
 // forward declarations
-namespace cinder {
-	class XmlTree;
-
-	namespace app {
-		class	KeyEvent;
-		class	MouseEvent;
-	}
-
-	namespace gl {
-		class	Texture2d;
-		typedef	std::shared_ptr<Texture2d>	Texture2dRef;
-	}
-}
+//namespace cinder {
+//	class XmlTree;
+//
+//	namespace app {
+//		class	KeyEvent;
+//		class	MouseEvent;
+//	}
+//
+//	namespace gl {
+//		class	Texture2d;
+//		typedef	std::shared_ptr<Texture2d>	Texture2dRef;
+//	}
+//}
+using namespace ci;
+using namespace ci::app;
+using namespace std;
 
 namespace VideoDromm
 {
@@ -46,6 +52,8 @@ namespace VideoDromm
 		bool							isFlipV() { return mFlipV; };
 		int								getTextureWidth();
 		int								getTextureHeight();
+		//!
+		// TODO virtual void					fromXml(const ci::XmlTree &xml);
 		//! read a xml file and pass back a vector of VDTextures
 		static VDTextureList			readSettings(const ci::DataSourceRef &source);
 		//! write a xml file
@@ -72,6 +80,8 @@ namespace VideoDromm
 	public:
 		//
 		static TextureImageRef create(const std::string &filepath) { return std::make_shared<TextureImage>(filepath); }
+		//!
+		// TODO void		fromXml(const ci::XmlTree &xml) override;
 
 	public:
 		TextureImage(const std::string &filepath);
