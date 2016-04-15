@@ -135,14 +135,15 @@ namespace VideoDromm {
 	}
 	// --------- child classes
 	TextureImage::TextureImage(const std::string &filepath) {
-
-		fs::path fullPath = getAssetPath("") / filepath;// TODO / mVDSettings->mAssetsPath
-		if (fs::exists(fullPath)) {
-			mFilePathOrText = filepath; // save the existing file path
-			mTexture = ci::gl::Texture::create(loadImage(loadAsset(mFilePathOrText)), ci::gl::Texture::Format().loadTopDown(mTopDown));		
-		}
-		else {
-			mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
+		if (filepath.length() > 0) {
+			fs::path fullPath = getAssetPath("") / filepath;// TODO / mVDSettings->mAssetsPath
+			if (fs::exists(fullPath)) {
+				mFilePathOrText = filepath; // save the existing file path
+				mTexture = ci::gl::Texture::create(loadImage(loadAsset(mFilePathOrText)), ci::gl::Texture::Format().loadTopDown(mTopDown));		
+			}
+			else {
+				mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
+			}
 		}
 	}
 	/*void TextureImage::fromXml(const XmlTree &xml)

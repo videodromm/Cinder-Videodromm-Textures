@@ -3,7 +3,9 @@
 <template name="Videodromm: Textures" parent="org.libcinder.apptemplates.basicopengl">
 	<requires>com.videodromm.Videodromm-Textures</requires>
 	<source replaceContents="true" replaceName="true">src/_TBOX_PREFIX_App.cpp</source>
+	<asset>assets/0.jpg</asset>
 	<asset>assets/passthru.vert</asset>
 	<asset>assets/passthru.frag</asset>
+	<asset>assets/textures.xml</asset>
 </template>
 </cinder>
