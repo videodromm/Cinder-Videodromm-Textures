@@ -8,20 +8,6 @@
 #include <atomic>
 #include <vector>
 
-// forward declarations
-//namespace cinder {
-//	class XmlTree;
-//
-//	namespace app {
-//		class	KeyEvent;
-//		class	MouseEvent;
-//	}
-//
-//	namespace gl {
-//		class	Texture2d;
-//		typedef	std::shared_ptr<Texture2d>	Texture2dRef;
-//	}
-//}
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -53,7 +39,9 @@ namespace VideoDromm
 		int								getTextureWidth();
 		int								getTextureHeight();
 		//!
-		// TODO virtual void					fromXml(const ci::XmlTree &xml);
+		virtual void					fromXml(const ci::XmlTree &xml);
+		//!
+		virtual XmlTree					toXml() const;
 		//! read a xml file and pass back a vector of VDTextures
 		static VDTextureList			readSettings(const ci::DataSourceRef &source);
 		//! write a xml file
@@ -79,12 +67,14 @@ namespace VideoDromm
 		: public VDTexture {
 	public:
 		//
-		static TextureImageRef create(const std::string &filepath) { return std::make_shared<TextureImage>(filepath); }
+		static TextureImageRef create() { return std::make_shared<TextureImage>(); }
 		//!
-		// TODO void		fromXml(const ci::XmlTree &xml) override;
+		void				fromXml(const XmlTree &xml) override;
+		//!
+		virtual	XmlTree	toXml() const override;
 
 	public:
-		TextureImage(const std::string &filepath);
+		TextureImage();
 		virtual ~TextureImage(void);
 
 		//! returns a shared pointer
@@ -104,10 +94,14 @@ namespace VideoDromm
 		: public VDTexture {
 	public:
 		//
-		static TextureTextRef create(const std::string &filepath) { return std::make_shared<TextureText>(filepath); }
+		static TextureTextRef create() { return std::make_shared<TextureText>(); }
+		//!
+		void				fromXml(const XmlTree &xml) override;
+		//!
+		virtual	XmlTree	toXml() const override;
 
 	public:
-		TextureText(const std::string &filepath);
+		TextureText();
 		virtual ~TextureText(void);
 
 		//! returns a shared pointer 
@@ -127,10 +121,14 @@ namespace VideoDromm
 		: public VDTexture {
 	public:
 		//
-		static TextureMovieRef create(const std::string &filepath) { return std::make_shared<TextureMovie>(filepath); }
+		static TextureMovieRef create() { return std::make_shared<TextureMovie>(); }
+		//!
+		void				fromXml(const XmlTree &xml) override;
+		//!
+		virtual	XmlTree	toXml() const override;
 
 	public:
-		TextureMovie(const std::string &filepath);
+		TextureMovie();
 		virtual ~TextureMovie(void);
 
 		//! returns a shared pointer 

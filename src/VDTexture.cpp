@@ -52,22 +52,24 @@ namespace VideoDromm {
 
 			// iterate textures
 			for (XmlTree::ConstIter child = texturesXml.begin("texture"); child != texturesXml.end(); ++child) {
+				XmlTree detailsXml = child->getChild("details");
 
 				// create texture of the correct type
-				std::string texturetype = child->getAttributeValue<std::string>("texturetype", "unknown");
-				std::string filepath = child->getAttributeValue<std::string>("filepath", "");
+				std::string texturetype = detailsXml.getAttributeValue<std::string>("texturetype", "unknown");
+				//std::string filepath = detailsXml.getAttributeValue<std::string>("filepath", "");
 				if (texturetype == "image") {
-					TextureImageRef t(new TextureImage(filepath));
-					// TODO t->fromXml(child->);
-					t->mType = IMAGE;
+					TextureImageRef t(new TextureImage());
+					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 				}
 				else if (texturetype == "text") {
-					TextureTextRef t(new TextureText(filepath));
+					TextureTextRef t(new TextureText());
+					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 				}
 				else if (texturetype == "movie") {
-					TextureMovieRef t(new TextureMovie(filepath));
+					TextureMovieRef t(new TextureMovie());
+					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 				}
 			}
@@ -89,21 +91,43 @@ namespace VideoDromm {
 			XmlTree			texture;
 			texture.setTag("texture");
 			texture.setAttribute("id", i + 1);
-
 			switch (vdtexturelist[i]->mType) {
-
 			case IMAGE: texture.setAttribute("texturetype", "image"); break;
 			case TEXT: texture.setAttribute("texturetype", "text"); break;
 			case MOVIE: texture.setAttribute("texturetype", "movie"); break;
 			default: texture.setAttribute("texturetype", "unknown"); break;
 			}
+			// details specific to texture type
+			texture.push_back(vdtexturelist[i]->toXml());
+
 			// add texture doc
-			texture.setAttribute("filepath", vdtexturelist[i]->mFilePathOrText); 
+			//texture.setAttribute("filepath", vdtexturelist[i]->mFilePathOrText);
 			doc.push_back(texture);
 		}
 
 		// write file
 		doc.write(target);
+	}
+	XmlTree	VDTexture::toXml() const
+	{
+		XmlTree		xml;
+		xml.setTag("details");
+		switch (mType) {
+		case IMAGE: xml.setAttribute("texturetype", "image"); break;
+		case TEXT: xml.setAttribute("texturetype", "text"); break;
+		case MOVIE: xml.setAttribute("texturetype", "movie"); break;
+		default: xml.setAttribute("texturetype", "unknown"); break;
+		}
+		xml.setAttribute("filepath", mFilePathOrText);
+		xml.setAttribute("width", mWidth);
+		xml.setAttribute("height", mHeight);
+
+		return xml;
+	}
+
+	void VDTexture::fromXml(const XmlTree &xml)
+	{
+
 	}
 
 	int VDTexture::getTextureWidth() {
@@ -134,33 +158,55 @@ namespace VideoDromm {
 		return mTexture;
 	}
 	// --------- child classes
-	TextureImage::TextureImage(const std::string &filepath) {
-		if (filepath.length() > 0) {
-			fs::path fullPath = getAssetPath("") / filepath;// TODO / mVDSettings->mAssetsPath
+	TextureImage::TextureImage() {
+	}
+	XmlTree	TextureImage::toXml() const {
+		XmlTree xml = VDTexture::toXml();
+
+		// add attributes specific to this type of texture
+		xml.setAttribute("path", getAssetPath("").string());
+		return xml;
+	}
+
+	void TextureImage::fromXml(const XmlTree &xml)
+	{
+		VDTexture::fromXml(xml);
+		// retrieve attributes specific to this types of texture
+		mFilePathOrText = xml.getAttributeValue<string>("filepath", "");
+		if (mFilePathOrText.length() > 0) {
+			fs::path fullPath = getAssetPath("") / mFilePathOrText;// TODO / mVDSettings->mAssetsPath
 			if (fs::exists(fullPath)) {
-				mFilePathOrText = filepath; // save the existing file path
-				mTexture = ci::gl::Texture::create(loadImage(loadAsset(mFilePathOrText)), ci::gl::Texture::Format().loadTopDown(mTopDown));		
+				//mFilePathOrText = filepath; // save the existing file path
+				mTexture = ci::gl::Texture::create(loadImage(loadAsset(mFilePathOrText)), ci::gl::Texture::Format().loadTopDown(mTopDown));
 			}
 			else {
 				mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
 			}
 		}
+		mType = IMAGE;
 	}
-	/*void TextureImage::fromXml(const XmlTree &xml)
-	{
-		// TODO create xml loading of specific attributes for all texturs
-		// retrieve attributes global to all types of texture
-		//mSomething = xml.getAttributeValue<int>("so", 16);
-
-	}*/
 	ci::gl::Texture2dRef TextureImage::getTexture() {
 		return mTexture;
 	}
 	TextureImage::~TextureImage(void) {
 
 	}
-	TextureText::TextureText(const std::string &filepath) {
+	TextureText::TextureText() {
 
+	}
+	void TextureText::fromXml(const XmlTree &xml)
+	{
+		// retrieve attributes specific to this types of texture
+		mFilePathOrText = xml.getAttributeValue<string>("filepath", "");
+		mType = TEXT;
+
+	}
+	XmlTree	TextureText::toXml() const {
+		XmlTree xml = VDTexture::toXml();
+
+		// add attributes specific to this type of texture
+		xml.setAttribute("filepath", mFilePathOrText);
+		return xml;
 	}
 	ci::gl::Texture2dRef TextureText::getTexture() {
 		return mTexture;
@@ -168,8 +214,22 @@ namespace VideoDromm {
 	TextureText::~TextureText(void) {
 
 	}
-	TextureMovie::TextureMovie(const std::string &filepath) {
+	TextureMovie::TextureMovie() {
 
+	}
+	void TextureMovie::fromXml(const XmlTree &xml)
+	{
+		// retrieve attributes specific to this types of texture
+		mFilePathOrText = xml.getAttributeValue<string>("filepath", "");
+		mType = MOVIE;
+
+	}
+	XmlTree	TextureMovie::toXml() const {
+		XmlTree xml = VDTexture::toXml();
+
+		// add attributes specific to this type of texture
+		xml.setAttribute("filepath", mFilePathOrText);
+		return xml;
 	}
 	ci::gl::Texture2dRef TextureMovie::getTexture() {
 		return mTexture;

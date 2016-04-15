@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <textures version="1.0">
-	<texture id="1" texturetype="image" filepath="0.jpg"/>
-	<texture id="2" texturetype="unknown" filepath=""/>
+	<texture id="1" texturetype="image">
+		<details texturetype="image" filepath="0.jpg" width="640" height="480" path=""/>
+	</texture>
 </textures>
