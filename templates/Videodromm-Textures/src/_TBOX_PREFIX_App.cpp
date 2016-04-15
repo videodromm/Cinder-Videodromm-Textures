@@ -36,8 +36,8 @@ void _TBOX_PREFIX_App::setup()
 	}
 	else {
 		// otherwise create a texture from scratch
-		fs::path imagePath = getAssetPath("") / "0.jpg";
-		mTexs.push_back(TextureImage::create(imagePath.string()));
+		mTexs.push_back(TextureImage::create());
+
 	}
 }
 
