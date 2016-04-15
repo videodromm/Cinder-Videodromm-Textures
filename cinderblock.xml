@@ -2,7 +2,7 @@
 <cinder>
 <block
 	name="Videodromm-Textures"
-	id="com.videodromm.Videodromm"
+	id="com.videodromm.Videodromm-Textures"
 	author="Bruce Lane"
 	license="GNU AFFERO GENERAL PUBLIC LICENSE"
     version="1.0"
@@ -22,4 +22,5 @@
 		<libraryPath>lib</libraryPath>
 	</platform>
 </block>
+<template>templates/Videodromm-Textures/template.xml</template>
 </cinder>

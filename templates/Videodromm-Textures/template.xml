@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<cinder>
+<template name="Videodromm: Basic" parent="org.libcinder.apptemplates.basicopengl">
+	<requires>com.videodromm.Videodromm-Textures</requires>
+	<source replaceContents="true" replaceName="true">src/_TBOX_PREFIX_App.cpp</source>
+	<asset>assets/passthru.vert</asset>
+	<asset>assets/passthru.frag</asset>
+</template>
+</cinder>
