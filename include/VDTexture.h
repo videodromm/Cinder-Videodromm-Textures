@@ -4,6 +4,8 @@
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
 #include "cinder/Xml.h"
+#include "cinder/Capture.h"
+#include "cinder/Log.h"
 
 #include <atomic>
 #include <vector>
@@ -20,7 +22,7 @@ namespace VideoDromm
 
 	class VDTexture: public std::enable_shared_from_this < VDTexture > {
 	public:
-		typedef enum { UNKNOWN, IMAGE, TEXT, MOVIE } TextureType;
+		typedef enum { UNKNOWN, IMAGE, TEXT, MOVIE, CAMERA } TextureType;
 	public:
 		VDTexture( TextureType aType = UNKNOWN);
 		virtual ~VDTexture( void );
@@ -137,6 +139,34 @@ namespace VideoDromm
 		//! 
 		virtual ci::gl::Texture2dRef	getTexture() override;
 	private:
+		ci::gl::Texture2dRef	mTexture;
+	};
+	// ---- TextureCamera ------------------------------------------------
+	typedef std::shared_ptr<class TextureCamera>	TextureCameraRef;
+
+	class TextureCamera
+		: public VDTexture {
+	public:
+		//
+		static TextureCameraRef create() { return std::make_shared<TextureCamera>(); }
+		//!
+		void				fromXml(const XmlTree &xml) override;
+		//!
+		virtual	XmlTree	toXml() const override;
+
+	public:
+		TextureCamera();
+		virtual ~TextureCamera(void);
+
+		//! returns a shared pointer 
+		TextureCameraRef	getPtr() { return std::static_pointer_cast<TextureCamera>(shared_from_this()); }
+	protected:
+		//! 
+		virtual ci::gl::Texture2dRef	getTexture() override;
+	private:
+		void printDevices();
+		string					mFirstCameraDeviceName;
+		CaptureRef				mCapture;
 		ci::gl::Texture2dRef	mTexture;
 	};
 }

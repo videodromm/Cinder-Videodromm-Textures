@@ -72,6 +72,11 @@ namespace VideoDromm {
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 				}
+				else if (texturetype == "camera") {
+					TextureCameraRef t(new TextureCamera());
+					t->fromXml(detailsXml);
+					vdtexturelist.push_back(t);
+				}
 			}
 		}
 
@@ -95,6 +100,7 @@ namespace VideoDromm {
 			case IMAGE: texture.setAttribute("texturetype", "image"); break;
 			case TEXT: texture.setAttribute("texturetype", "text"); break;
 			case MOVIE: texture.setAttribute("texturetype", "movie"); break;
+			case CAMERA: texture.setAttribute("texturetype", "camera"); break;
 			default: texture.setAttribute("texturetype", "unknown"); break;
 			}
 			// details specific to texture type
@@ -116,6 +122,7 @@ namespace VideoDromm {
 		case IMAGE: xml.setAttribute("texturetype", "image"); break;
 		case TEXT: xml.setAttribute("texturetype", "text"); break;
 		case MOVIE: xml.setAttribute("texturetype", "movie"); break;
+		case CAMERA: xml.setAttribute("texturetype", "camera"); break;
 		default: xml.setAttribute("texturetype", "unknown"); break;
 		}
 		xml.setAttribute("filepath", mFilePathOrText);
@@ -171,7 +178,7 @@ namespace VideoDromm {
 	void TextureImage::fromXml(const XmlTree &xml)
 	{
 		VDTexture::fromXml(xml);
-		// retrieve attributes specific to this types of texture
+		// retrieve attributes specific to this type of texture
 		mFilePathOrText = xml.getAttributeValue<string>("filepath", "");
 		if (mFilePathOrText.length() > 0) {
 			fs::path fullPath = getAssetPath("") / mFilePathOrText;// TODO / mVDSettings->mAssetsPath
@@ -196,7 +203,7 @@ namespace VideoDromm {
 	}
 	void TextureText::fromXml(const XmlTree &xml)
 	{
-		// retrieve attributes specific to this types of texture
+		// retrieve attributes specific to this type of texture
 		mFilePathOrText = xml.getAttributeValue<string>("filepath", "");
 		mType = TEXT;
 
@@ -214,12 +221,14 @@ namespace VideoDromm {
 	TextureText::~TextureText(void) {
 
 	}
+
+	// TextureMovie
 	TextureMovie::TextureMovie() {
 
 	}
 	void TextureMovie::fromXml(const XmlTree &xml)
 	{
-		// retrieve attributes specific to this types of texture
+		// retrieve attributes specific to this type of texture
 		mFilePathOrText = xml.getAttributeValue<string>("filepath", "");
 		mType = MOVIE;
 
@@ -235,6 +244,60 @@ namespace VideoDromm {
 		return mTexture;
 	}
 	TextureMovie::~TextureMovie(void) {
+
+	}
+
+	// TextureCamera
+	TextureCamera::TextureCamera() {
+		mFirstCameraDeviceName = "";
+		printDevices();
+
+		try {
+			mCapture = Capture::create(640, 480);
+			mCapture->start();
+		}
+		catch (ci::Exception &exc) {
+			CI_LOG_EXCEPTION("Failed to init capture ", exc);
+		}
+	}
+	void TextureCamera::fromXml(const XmlTree &xml)
+	{
+		// retrieve attributes specific to this type of texture
+		mFilePathOrText = xml.getAttributeValue<string>("filepath", "");
+		mType = CAMERA;
+
+	}
+	XmlTree	TextureCamera::toXml() const {
+		XmlTree xml = VDTexture::toXml();
+
+		// add attributes specific to this type of texture
+		xml.setAttribute("camera", mFirstCameraDeviceName);
+		return xml;
+	}
+	ci::gl::Texture2dRef TextureCamera::getTexture() {
+		if (mCapture && mCapture->checkNewFrame()) {
+			if (!mTexture) {
+				// Capture images come back as top-down, and it's more efficient to keep them that way
+				mTexture = gl::Texture::create(*mCapture->getSurface(), gl::Texture::Format().loadTopDown());
+			}
+			else {
+				mTexture->update(*mCapture->getSurface());
+			}
+		}
+		return mTexture;
+	}
+	void TextureCamera::printDevices()
+	{
+		for (const auto &device : Capture::getDevices()) {
+			console() << "Device: " << device->getName() << " "
+#if defined( CINDER_COCOA_TOUCH )
+				<< (device->isFrontFacing() ? "Front" : "Rear") << "-facing"
+#endif
+				<< endl;
+			mFirstCameraDeviceName = device->getName();
+		}
+	}
+	TextureCamera::~TextureCamera(void) {
 
 	}
 
