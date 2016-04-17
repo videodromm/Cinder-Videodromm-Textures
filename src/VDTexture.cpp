@@ -257,7 +257,7 @@ namespace VideoDromm {
 		//addChar('O');
 		if (frame < mStrings[stringIndex].size() - 1) {
 			char c[2];
-			sprintf_s(c, "%s", mStrings[stringIndex].substr(frame, 1).c_str());
+			printf_s(c, "%s", mStrings[stringIndex].substr(frame, 1).c_str());
 			addChar(*c);
 		}
 		gl::ScopedFramebuffer fbScp(mFbo);
