@@ -210,7 +210,9 @@ namespace VideoDromm {
 		mSceneMatrix = mSceneDestMatrix = mat4(1.0f); // identity
 
 		// init text
+#if defined( CINDER_MSW )
 		addChar('Y'); addChar('O'); 
+#endif
 		stringIndex = 0;
 
 		currentFrame = -1;
