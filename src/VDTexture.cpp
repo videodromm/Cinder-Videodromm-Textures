@@ -253,8 +253,10 @@ namespace VideoDromm {
 		return xml;
 	}
 	ci::gl::Texture2dRef TextureText::getTexture() {
+#if defined( CINDER_MSW )
 		// should be in update?
 		//addChar('O');
+
 		if (frame < mStrings[stringIndex].size() - 1) {
 			char c[2];
 			printf_s(c, "%s", mStrings[stringIndex].substr(frame, 1).c_str());
@@ -273,7 +275,11 @@ namespace VideoDromm {
 		if ((!mDyingCharacters.empty()) && mDyingCharacters.front().isDead())
 			mDyingCharacters.pop_front();
 		return mFbo->getColorTexture();
+#else
+		return mTexture;
+#endif		
 	}
+#if defined( CINDER_MSW )
 	void TextureText::addChar(char c)
 	{
 		if (c == 32) {
@@ -301,6 +307,7 @@ namespace VideoDromm {
 		mCharacters.back().animIn(timeline(), mSceneDestMatrix);
 
 		timeline().apply(&mSceneMatrix, mSceneDestMatrix, 1.0f, EaseOutAtan(10));
+
 	}
 
 	void TextureText::removeChar()
@@ -324,6 +331,9 @@ namespace VideoDromm {
 			timeline().apply(&mSceneMatrix, mSceneDestMatrix, 1.0f, EaseOutAtan(10));
 		}
 	}
+#else
+
+#endif
 	TextureText::~TextureText(void) {
 
 	}
@@ -354,6 +364,7 @@ namespace VideoDromm {
 	}
 
 	// TextureCamera
+#if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
 	TextureCamera::TextureCamera() {
 		mFirstCameraDeviceName = "";
 		printDevices();
@@ -406,5 +417,7 @@ namespace VideoDromm {
 	TextureCamera::~TextureCamera(void) {
 
 	}
+#else
 
+#endif
 } // namespace VideoDromm

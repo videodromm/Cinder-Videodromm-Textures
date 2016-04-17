@@ -3,6 +3,8 @@
  * Used with permission for the Cinder Project ( http://libcinder.org )
 */
 
+
+
 #include "cinder/Timeline.h"
 #include "cinder/gl/TextureFont.h"
 #include "cinder/Easing.h"
@@ -12,6 +14,8 @@
 
 using namespace ci;
 using namespace std;
+
+#if defined( CINDER_MSW )
 
 Character::Character( gl::TextureFontRef textureFont, string character, mat4 matrix )
 {
@@ -82,3 +86,6 @@ void Character::draw() const
 		mTextureFont->drawString( mChar, mKernBounds.getCenter() - vec2( mKernBounds.getWidth(), 0.0f ) );
 	gl::popMatrices();
 }
+#else
+
+#endif

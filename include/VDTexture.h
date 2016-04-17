@@ -8,9 +8,9 @@
 #include "cinder/Capture.h"
 #include "cinder/Log.h"
 #include "cinder/Timeline.h"
-
+#if defined( CINDER_MSW )
 #include "Character.h"
-
+#endif
 #include <atomic>
 #include <vector>
 
@@ -122,11 +122,14 @@ namespace VideoDromm
 		mat4				mSceneDestMatrix;
 		gl::TextureFontRef	mTextureFont;
 
-		vector<Character>	mCharacters;
-		list<Character>		mDyingCharacters;
-	private:
+#if defined( CINDER_MSW )
 		void addChar(char c);
 		void removeChar();
+		vector<Character>	mCharacters;
+		list<Character>		mDyingCharacters;
+#endif		
+	private:
+
 		ci::gl::Texture2dRef	mTexture;
 		ci::JsonTree			mText;
 		std::vector<string>		mStrings;
@@ -163,6 +166,8 @@ namespace VideoDromm
 		ci::gl::Texture2dRef	mTexture;
 	};
 	// ---- TextureCamera ------------------------------------------------
+
+#if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
 	typedef std::shared_ptr<class TextureCamera>	TextureCameraRef;
 
 	class TextureCamera
@@ -190,4 +195,7 @@ namespace VideoDromm
 		CaptureRef				mCapture;
 		ci::gl::Texture2dRef	mTexture;
 	};
+#else
+
+#endif
 }

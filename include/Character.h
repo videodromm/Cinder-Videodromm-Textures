@@ -2,9 +2,9 @@
 * Code Copyright 2011 Chris McKenzie ( http://chrismckenzie.com )
 * Used with permission for the Cinder Project ( http://libcinder.org )
 */
+#if defined( CINDER_MSW )
 
 #pragma once
-
 #include "cinder/gl/TextureFont.h"
 #include "cinder/Timeline.h"
 #include "cinder/Vector.h"
@@ -43,3 +43,6 @@ protected:
 
 	bool							mIsDead;
 };
+#else
+
+#endif
