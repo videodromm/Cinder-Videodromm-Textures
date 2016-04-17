@@ -193,7 +193,6 @@ namespace VideoDromm {
 		return mTexture;
 	}
 	TextureImage::~TextureImage(void) {
-
 	}
 	// TextureText
 	TextureText::TextureText() {
