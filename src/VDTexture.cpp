@@ -73,9 +73,11 @@ namespace VideoDromm {
 					vdtexturelist.push_back(t);
 				}
 				else if (texturetype == "camera") {
+#if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
 					TextureCameraRef t(new TextureCamera());
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
+#endif
 				}
 			}
 		}
@@ -196,6 +198,7 @@ namespace VideoDromm {
 	// TextureText
 	TextureText::TextureText() {
 		// font
+#if defined( CINDER_MSW )
 		Font customFont(Font(loadAsset("Signika-Regular.ttf"), 100));
 		gl::TextureFont::Format f;
 		f.enableMipmapping(true);
@@ -210,9 +213,8 @@ namespace VideoDromm {
 		mSceneMatrix = mSceneDestMatrix = mat4(1.0f); // identity
 
 		// init text
-#if defined( CINDER_MSW )
 		addChar('Y'); addChar('O'); 
-#endif
+
 		stringIndex = 0;
 
 		currentFrame = -1;
@@ -221,6 +223,7 @@ namespace VideoDromm {
 		gl::Fbo::Format format;
 		//format.setSamples( 4 ); // uncomment this to enable 4x antialiasing
 		mFbo = gl::Fbo::create(mWidth, mHeight, format.depthTexture());
+#endif	
 	}
 	void TextureText::fromXml(const XmlTree &xml)
 	{
