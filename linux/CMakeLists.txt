@@ -21,8 +21,9 @@ endif()
 set( EXE_NAME ${PROJECT_NAME} )
 
 set( SRC_FILES
-	${SRC_DIR}/VDApp.cpp
 	${SRC_DIR}/VDTexture.cpp
+	${SRC_DIR}/Character.cpp
+	${SRC_DIR}/VDApp.cpp
 )
 
 add_executable( "${EXE_NAME}" ${SRC_FILES} )

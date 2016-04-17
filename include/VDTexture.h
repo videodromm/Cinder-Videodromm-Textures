@@ -4,8 +4,12 @@
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
 #include "cinder/Xml.h"
+#include "cinder/Json.h"
 #include "cinder/Capture.h"
 #include "cinder/Log.h"
+#include "cinder/Timeline.h"
+
+#include "Character.h"
 
 #include <atomic>
 #include <vector>
@@ -111,9 +115,26 @@ namespace VideoDromm
 	protected:
 		//! 
 		virtual ci::gl::Texture2dRef	getTexture() override;
-	private:
-		ci::gl::Texture2dRef	mTexture;
+		CameraPersp			mCam;
+		float				mCamDist;
 
+		Anim<mat4>			mSceneMatrix;
+		mat4				mSceneDestMatrix;
+		gl::TextureFontRef	mTextureFont;
+
+		vector<Character>	mCharacters;
+		list<Character>		mDyingCharacters;
+	private:
+		void addChar(char c);
+		void removeChar();
+		ci::gl::Texture2dRef	mTexture;
+		ci::JsonTree			mText;
+		std::vector<string>		mStrings;
+		int						stringIndex;
+		int						currentFrame;
+		int						frame;
+		int						startFrame;
+		gl::FboRef				mFbo;
 	};
 
 	// ---- TextureMovie ------------------------------------------------
