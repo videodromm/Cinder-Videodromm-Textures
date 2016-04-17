@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <textures version="1.0">
-	<texture id="1" texturetype="camera">
-		<details texturetype="camera" filepath="0.jpg" width="640" height="480" path=""/>
+	<texture id="1" texturetype="image">
+		<details filepath="0.jpg" width="640" height="480" path="assets" topdown="0"/>
 	</texture>
 </textures>
