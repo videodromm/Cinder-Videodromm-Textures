@@ -131,7 +131,10 @@ namespace VideoDromm {
 	{
 
 	}
+	void VDTexture::loadImageFromFileFullPath(string aFilePath) {
+		mTexture = ci::gl::Texture::create(loadImage(aFilePath), ci::gl::Texture::Format().loadTopDown(mTopDown));
 
+	}
 	int VDTexture::getTextureWidth() {
 		return mWidth;
 	};
@@ -159,7 +162,9 @@ namespace VideoDromm {
 	ci::gl::TextureRef VDTexture::getTexture() {
 		return mTexture;
 	}
-	// --------- child classes
+	/*
+	*   child classes
+	*/
 	TextureImage::TextureImage() {
 	}
 	XmlTree	TextureImage::toXml() const {
@@ -189,6 +194,8 @@ namespace VideoDromm {
 			}
 		}
 	}
+
+
 	ci::gl::Texture2dRef TextureImage::getTexture() {
 		return mTexture;
 	}

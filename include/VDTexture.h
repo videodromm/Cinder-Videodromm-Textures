@@ -52,6 +52,7 @@ namespace VideoDromm
 		static VDTextureList			readSettings(const ci::DataSourceRef &source);
 		//! write a xml file
 		static void						writeSettings(const VDTextureList &vdtexturelist, const ci::DataTargetRef &target);
+		void							loadImageFromFileFullPath(string aFilePath);
 
 	protected:
 		std::string						mName;
@@ -75,10 +76,9 @@ namespace VideoDromm
 		//
 		static TextureImageRef create() { return std::make_shared<TextureImage>(); }
 		//!
-		void				fromXml(const XmlTree &xml) override;
+		void					fromXml(const XmlTree &xml) override;
 		//!
-		virtual	XmlTree	toXml() const override;
-
+		virtual	XmlTree			toXml() const override;
 	public:
 		TextureImage();
 		virtual ~TextureImage(void);
@@ -89,7 +89,7 @@ namespace VideoDromm
 		//! 
 		virtual ci::gl::Texture2dRef	getTexture() override;
 	private:
-		ci::gl::Texture2dRef	mTexture;
+		//ci::gl::Texture2dRef	mTexture;
 
 	};
 
@@ -130,7 +130,7 @@ namespace VideoDromm
 #endif		
 	private:
 
-		ci::gl::Texture2dRef	mTexture;
+		//ci::gl::Texture2dRef	mTexture;
 		ci::JsonTree			mText;
 		std::vector<string>		mStrings;
 		int						stringIndex;
@@ -163,7 +163,7 @@ namespace VideoDromm
 		//! 
 		virtual ci::gl::Texture2dRef	getTexture() override;
 	private:
-		ci::gl::Texture2dRef	mTexture;
+		//ci::gl::Texture2dRef	mTexture;
 	};
 	// ---- TextureCamera ------------------------------------------------
 
@@ -193,7 +193,7 @@ namespace VideoDromm
 		void printDevices();
 		string					mFirstCameraDeviceName;
 		CaptureRef				mCapture;
-		ci::gl::Texture2dRef	mTexture;
+		//ci::gl::Texture2dRef	mTexture;
 	};
 #else
 
