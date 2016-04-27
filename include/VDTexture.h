@@ -63,6 +63,7 @@ namespace VideoDromm
 		bool							mTopDown;
 		int								mWidth;
 		int								mHeight;
+
 		//! Texture
 		ci::gl::Texture2dRef			mTexture;
 	};

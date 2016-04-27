@@ -10,7 +10,7 @@ namespace VideoDromm {
 	VDTexture::VDTexture(TextureType aType)
 		: mFilePathOrText("")
 		, mName("")
-		, mTopDown(true)
+		, mTopDown(false)
 		, mFlipV(false)
 		, mFlipH(true)
 		, mWidth(640)
@@ -31,6 +31,7 @@ namespace VideoDromm {
 	VDTexture::~VDTexture(void) {
 
 	}
+
 
 	VDTextureList VDTexture::readSettings(const DataSourceRef &source)
 	{
