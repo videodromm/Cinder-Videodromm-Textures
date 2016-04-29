@@ -44,7 +44,7 @@ namespace VideoDromm {
 
 		// check if this is a valid file 
 		bool isOK = doc.hasChild("textures");
-		if (!isOK) return vdtexturelist;
+		//if (!isOK) return vdtexturelist;
 
 		//
 		if (isOK) {
@@ -80,9 +80,22 @@ namespace VideoDromm {
 					vdtexturelist.push_back(t);
 #endif
 				}
+				else {
+					// unknown texture type
+					CI_LOG_V("unknown texture type");
+					TextureTextRef t(new TextureText());
+					t->setString("VIDEODROMM");
+					vdtexturelist.push_back(t);
+				}
 			}
 		}
-
+		else {
+			// malformed XML
+			CI_LOG_V("malformed XML");
+			TextureTextRef t(new TextureText());
+			t->setString("videodromm");
+			vdtexturelist.push_back(t);
+		}
 		return vdtexturelist;
 	}
 
@@ -220,7 +233,8 @@ namespace VideoDromm {
 		mSceneMatrix = mSceneDestMatrix = mat4(1.0f); // identity
 
 		// init text
-		addChar('Y'); addChar('O'); 
+		addChar('V'); addChar('I'); addChar('D'); addChar('E'); addChar('O'); 
+		addChar('D'); addChar('R'); addChar('O'); addChar('M'); addChar('M');
 
 		stringIndex = 0;
 
@@ -231,6 +245,9 @@ namespace VideoDromm {
 		//format.setSamples( 4 ); // uncomment this to enable 4x antialiasing
 		mFbo = gl::Fbo::create(mWidth, mHeight, format.depthTexture());
 #endif	
+	}
+	void TextureText::setString(string aString) {
+		mStrings.push_back(aString);
 	}
 	void TextureText::fromXml(const XmlTree &xml)
 	{

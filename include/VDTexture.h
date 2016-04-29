@@ -101,11 +101,13 @@ namespace VideoDromm
 		: public VDTexture {
 	public:
 		//
-		static TextureTextRef create() { return std::make_shared<TextureText>(); }
+		static TextureTextRef	create() { return std::make_shared<TextureText>(); }
 		//!
-		void				fromXml(const XmlTree &xml) override;
+		void					fromXml(const XmlTree &xml) override;
 		//!
-		virtual	XmlTree	toXml() const override;
+		virtual	XmlTree			toXml() const override;
+		//!
+		void					setString(string aString);
 
 	public:
 		TextureText();
@@ -116,12 +118,12 @@ namespace VideoDromm
 	protected:
 		//! 
 		virtual ci::gl::Texture2dRef	getTexture() override;
-		CameraPersp			mCam;
-		float				mCamDist;
+		CameraPersp						mCam;
+		float							mCamDist;
 
-		Anim<mat4>			mSceneMatrix;
-		mat4				mSceneDestMatrix;
-		gl::TextureFontRef	mTextureFont;
+		Anim<mat4>						mSceneMatrix;
+		mat4							mSceneDestMatrix;
+		gl::TextureFontRef				mTextureFont;
 
 #if defined( CINDER_MSW )
 		void addChar(char c);
