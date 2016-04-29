@@ -78,13 +78,19 @@ namespace VideoDromm {
 					TextureCameraRef t(new TextureCamera());
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
+#else
+					// unknown texture type
+					CI_LOG_V("camera not supported on this platform");
+					TextureTextRef t(new TextureText());
+					t->setString("camera not supported on this platform");
+					vdtexturelist.push_back(t);
 #endif
 				}
 				else {
 					// unknown texture type
 					CI_LOG_V("unknown texture type");
 					TextureTextRef t(new TextureText());
-					t->setString("VIDEODROMM");
+					t->setString("unknown texture type");
 					vdtexturelist.push_back(t);
 				}
 			}
@@ -93,7 +99,7 @@ namespace VideoDromm {
 			// malformed XML
 			CI_LOG_V("malformed XML");
 			TextureTextRef t(new TextureText());
-			t->setString("videodromm");
+			t->setString("malformed XML");
 			vdtexturelist.push_back(t);
 		}
 		return vdtexturelist;
