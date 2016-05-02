@@ -8,9 +8,7 @@
 #include "cinder/Capture.h"
 #include "cinder/Log.h"
 #include "cinder/Timeline.h"
-#if defined( CINDER_MSW )
-#include "Character.h"
-#endif
+
 #include <atomic>
 #include <vector>
 
@@ -23,10 +21,12 @@ namespace VideoDromm
 	// stores the pointer to the VDTexture instance
 	typedef std::shared_ptr<class VDTexture> 	VDTextureRef;
 	typedef std::vector<VDTextureRef>			VDTextureList;
+	// for profiling
+	typedef std::chrono::high_resolution_clock Clock;
 
 	class VDTexture: public std::enable_shared_from_this < VDTexture > {
 	public:
-		typedef enum { UNKNOWN, IMAGE, TEXT, MOVIE, CAMERA } TextureType;
+		typedef enum { UNKNOWN, IMAGE, IMAGESEQUENCE, MOVIE, CAMERA } TextureType;
 	public:
 		VDTexture( TextureType aType = UNKNOWN);
 		virtual ~VDTexture( void );
@@ -52,17 +52,18 @@ namespace VideoDromm
 		static VDTextureList			readSettings(const ci::DataSourceRef &source);
 		//! write a xml file
 		static void						writeSettings(const VDTextureList &vdtexturelist, const ci::DataTargetRef &target);
-		void							loadImageFromFileFullPath(string aFilePath);
-
+		void							loadImageFromFileFullPath(string apath);
+		string							getStatus() { return mStatus; };
 	protected:
 		std::string						mName;
 		bool							mFlipV;
 		bool							mFlipH;
 		TextureType						mType;
-		std::string						mFilePathOrText;
+		std::string						mPath;
 		bool							mTopDown;
 		int								mWidth;
 		int								mHeight;
+		std::string						mStatus;
 
 		//! Texture
 		ci::gl::Texture2dRef			mTexture;
@@ -94,53 +95,60 @@ namespace VideoDromm
 
 	};
 
-	// ---- TextureText ------------------------------------------------
-	typedef std::shared_ptr<class TextureText>	TextureTextRef;
+	// ---- TextureImageSequence ------------------------------------------------
+	typedef std::shared_ptr<class TextureImageSequence>	TextureImageSequenceRef;
 
-	class TextureText
+	class TextureImageSequence
 		: public VDTexture {
 	public:
 		//
-		static TextureTextRef	create() { return std::make_shared<TextureText>(); }
+		static TextureImageSequenceRef	create() { return std::make_shared<TextureImageSequence>(); }
 		//!
 		void					fromXml(const XmlTree &xml) override;
 		//!
 		virtual	XmlTree			toXml() const override;
-		//!
-		void					setString(string aString);
-
-	public:
-		TextureText();
-		virtual ~TextureText(void);
+		TextureImageSequence();
+		virtual ~TextureImageSequence(void);
 
 		//! returns a shared pointer 
-		TextureTextRef	getPtr() { return std::static_pointer_cast<TextureText>(shared_from_this()); }
+		TextureImageSequenceRef	getPtr() { return std::static_pointer_cast<TextureImageSequence>(shared_from_this()); }
+		void						playPauseSequence();
+		void						syncToBeat();
+		void						stopSequence();
+		void						toggleLoadingFromDisk();
+		void						stopLoading();
+		int							getPlayheadPosition();
+		void						setPlayheadPosition(int position);
+
+		int							getSpeed();
+		void						setSpeed(int speed);
+		void						reverseSequence();
+		bool						isLoadingFromDisk();
+		bool						isValid(){ return mFramesLoaded > 0; };
+		int							getMaxFrame();	
 	protected:
 		//! 
 		virtual ci::gl::Texture2dRef	getTexture() override;
-		CameraPersp						mCam;
-		float							mCamDist;
 
-		Anim<mat4>						mSceneMatrix;
-		mat4							mSceneDestMatrix;
-		gl::TextureFontRef				mTextureFont;
-
-#if defined( CINDER_MSW )
-		void addChar(char c);
-		void removeChar();
-		vector<Character>	mCharacters;
-		list<Character>		mDyingCharacters;
-#endif		
 	private:
-
-		//ci::gl::Texture2dRef	mTexture;
-		ci::JsonTree			mText;
-		std::vector<string>		mStrings;
-		int						stringIndex;
-		int						currentFrame;
-		int						frame;
-		int						startFrame;
-		gl::FboRef				mFbo;
+		int							playheadFrameInc;
+		void						loadNextImageFromDisk();
+		void						updateSequence();
+		bool						mIsSequence;
+		string						mFolder;
+		string						mPrefix;
+		string						mExt;
+		int							mNumberOfDigits;
+		int							mNextIndexFrameToTry;
+		int							mCurrentLoadedFrame;
+		int							mFramesLoaded;
+		int							mPlayheadPosition;
+		bool						mLoadingPaused;
+		bool						mLoadingFilesComplete;
+		bool						mPlaying;
+		int							mSpeed;
+		bool						mSyncToBeat;
+		vector<ci::gl::TextureRef>	mSequenceTextures;
 	};
 
 	// ---- TextureMovie ------------------------------------------------

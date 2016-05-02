@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <textures version="1.0">
 	<texture id="1" texturetype="image">
-		<details filepath="0.jpg" width="640" height="480" path="assets" topdown="0"/>
+		<details path="0.jpg" width="640" height="480" topdown="1"/>
+	</texture>
+	<texture id="2" texturetype="imagesequence">
+		<details path="mandalas" width="640" height="480"/>
 	</texture>
 </textures>

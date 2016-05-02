@@ -21,8 +21,7 @@ public:
 private:
 	VDTextureList				mTexs;
 	fs::path					mTexturesFilepath;
-
-
+	int							i, x;
 };
 
 
@@ -48,7 +47,7 @@ void _TBOX_PREFIX_App::update()
 void _TBOX_PREFIX_App::cleanup()
 {
 
-	// save warp settings
+	// save textures
 	VDTexture::writeSettings(mTexs, writeFile(mTexturesFilepath));
 
 	quit();
@@ -60,8 +59,14 @@ void _TBOX_PREFIX_App::mouseDown(MouseEvent event)
 
 void _TBOX_PREFIX_App::draw()
 {
-	gl::clear( Color( 0, 0, 0 ) ); 
-	gl::draw(mTexs[0]->getTexture());
+	gl::clear( Color::black() );
+	i = 0;
+	for (auto tex : mTexs)
+	{
+		int x = 128 * i;
+		gl::draw(tex->getTexture(), Rectf(0 + x, 0, 128 + x, 128));
+		i++;
+	}
 }
 
 

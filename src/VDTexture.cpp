@@ -8,7 +8,7 @@ using namespace ci::app;
 
 namespace VideoDromm {
 	VDTexture::VDTexture(TextureType aType)
-		: mFilePathOrText("")
+		: mPath("")
 		, mName("")
 		, mTopDown(false)
 		, mFlipV(false)
@@ -18,11 +18,11 @@ namespace VideoDromm {
 	{
 
 		if (mName.length() == 0) {
-			mName = mFilePathOrText;
+			mName = mPath;
 		}
 		// init the texture whatever happens next
-		if (mFilePathOrText.length() > 0) {
-			mTexture = ci::gl::Texture::create(ci::loadImage(mFilePathOrText), ci::gl::Texture::Format().loadTopDown(mTopDown));
+		if (mPath.length() > 0) {
+			mTexture = ci::gl::Texture::create(ci::loadImage(mPath), ci::gl::Texture::Format().loadTopDown(mTopDown));
 		}
 		else {
 			mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
@@ -57,14 +57,14 @@ namespace VideoDromm {
 				std::string texturetype = child->getAttributeValue<std::string>("texturetype", "unknown");
 				XmlTree detailsXml = child->getChild("details");
 
-				//std::string filepath = detailsXml.getAttributeValue<std::string>("filepath", "");
+				//std::string path = detailsXml.getAttributeValue<std::string>("path", "");
 				if (texturetype == "image") {
 					TextureImageRef t(new TextureImage());
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 				}
-				else if (texturetype == "text") {
-					TextureTextRef t(new TextureText());
+				else if (texturetype == "imagesequence") {
+					TextureImageSequenceRef t(new TextureImageSequence());
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 				}
@@ -81,16 +81,16 @@ namespace VideoDromm {
 #else
 					// unknown texture type
 					CI_LOG_V("camera not supported on this platform");
-					TextureTextRef t(new TextureText());
-					t->setString("camera not supported on this platform");
+					TextureImageRef t(new TextureImage());
+					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 #endif
 				}
 				else {
 					// unknown texture type
 					CI_LOG_V("unknown texture type");
-					TextureTextRef t(new TextureText());
-					t->setString("unknown texture type");
+					TextureImageRef t(new TextureImage());
+					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 				}
 			}
@@ -98,8 +98,13 @@ namespace VideoDromm {
 		else {
 			// malformed XML
 			CI_LOG_V("malformed XML");
-			TextureTextRef t(new TextureText());
-			t->setString("malformed XML");
+			TextureImageRef t(new TextureImage());
+			XmlTree		xml;
+			xml.setTag("details");
+			xml.setAttribute("path", "0.jpg");
+			xml.setAttribute("width", 640);
+			xml.setAttribute("height", 480);
+			t->fromXml(xml);
 			vdtexturelist.push_back(t);
 		}
 		return vdtexturelist;
@@ -120,7 +125,7 @@ namespace VideoDromm {
 			texture.setAttribute("id", i + 1);
 			switch (vdtexturelist[i]->mType) {
 			case IMAGE: texture.setAttribute("texturetype", "image"); break;
-			case TEXT: texture.setAttribute("texturetype", "text"); break;
+			case IMAGESEQUENCE: texture.setAttribute("texturetype", "imagesequence"); break;
 			case MOVIE: texture.setAttribute("texturetype", "movie"); break;
 			case CAMERA: texture.setAttribute("texturetype", "camera"); break;
 			default: texture.setAttribute("texturetype", "unknown"); break;
@@ -129,7 +134,7 @@ namespace VideoDromm {
 			texture.push_back(vdtexturelist[i]->toXml());
 
 			// add texture doc
-			//texture.setAttribute("filepath", vdtexturelist[i]->mFilePathOrText);
+			//texture.setAttribute("path", vdtexturelist[i]->mPath);
 			doc.push_back(texture);
 		}
 
@@ -140,7 +145,7 @@ namespace VideoDromm {
 	{
 		XmlTree		xml;
 		xml.setTag("details");
-		xml.setAttribute("filepath", mFilePathOrText);
+		xml.setAttribute("path", mPath);
 		xml.setAttribute("width", mWidth);
 		xml.setAttribute("height", mHeight);
 
@@ -151,8 +156,8 @@ namespace VideoDromm {
 	{
 
 	}
-	void VDTexture::loadImageFromFileFullPath(string aFilePath) {
-		mTexture = ci::gl::Texture::create(loadImage(aFilePath), ci::gl::Texture::Format().loadTopDown(mTopDown));
+	void VDTexture::loadImageFromFileFullPath(string apath) {
+		mTexture = ci::gl::Texture::create(loadImage(apath), ci::gl::Texture::Format().loadTopDown(mTopDown));
 
 	}
 	int VDTexture::getTextureWidth() {
@@ -191,7 +196,7 @@ namespace VideoDromm {
 		XmlTree xml = VDTexture::toXml();
 
 		// add attributes specific to this type of texture
-		xml.setAttribute("path", getAssetPath("").string());
+		xml.setAttribute("path", mPath);
 		xml.setAttribute("topdown", mTopDown);
 		return xml;
 	}
@@ -202,12 +207,12 @@ namespace VideoDromm {
 		mType = IMAGE;
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
-		mFilePathOrText = xml.getAttributeValue<string>("filepath", "");
-		if (mFilePathOrText.length() > 0) {
-			fs::path fullPath = getAssetPath("") / mFilePathOrText;// TODO / mVDSettings->mAssetsPath
+		mPath = xml.getAttributeValue<string>("path", "");
+		if (mPath.length() > 0) {
+			fs::path fullPath = getAssetPath("") / mPath;// TODO / mVDSettings->mAssetsPath
 			if (fs::exists(fullPath)) {
 				// TODO mTopDown has no effect!?!
-				mTexture = ci::gl::Texture::create(loadImage(loadAsset(mFilePathOrText)), ci::gl::Texture::Format().loadTopDown(mTopDown));
+				mTexture = ci::gl::Texture::create(loadImage(loadAsset(mPath)), ci::gl::Texture::Format().loadTopDown(mTopDown));
 			}
 			else {
 				mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
@@ -221,155 +226,250 @@ namespace VideoDromm {
 	}
 	TextureImage::~TextureImage(void) {
 	}
-	// TextureText
-	TextureText::TextureText() {
-		// font
-#if defined( CINDER_MSW )
-		Font customFont(Font(loadAsset("Signika-Regular.ttf"), 100));
-		gl::TextureFont::Format f;
-		f.enableMipmapping(true);
-		mTextureFont = gl::TextureFont::create(customFont, f);
+	// TextureImageSequence
+	TextureImageSequence::TextureImageSequence() {
+		// constructor
+		playheadFrameInc = 1;
+		mLoadingFilesComplete = true;
+		mLoadingPaused = false;
+		mFramesLoaded = 0;
+		mCurrentLoadedFrame = 0;
+		mNextIndexFrameToTry = 0;
+		mPlaying = false;
+		mSpeed = 1;
+		mExt = "png";
+		mPrefix = "none";
+		mNextIndexFrameToTry = 0;
+		mPlayheadPosition = 0;
+		mNumberOfDigits = 4;
+		mSyncToBeat = false;
 
-		// camera
-		mCamDist = 600.0f;
-		mCam.setPerspective(75.0f, getWindowAspectRatio(), 0.1f, 15000.0f);
-		mCam.lookAt(vec3(0.0f, 0.0f, mCamDist), vec3(0), vec3(0, 1, 0));
-		mCam.setLensShiftHorizontal(-0.6);
-		// scene
-		mSceneMatrix = mSceneDestMatrix = mat4(1.0f); // identity
-
-		// init text
-		addChar('V'); addChar('I'); addChar('D'); addChar('E'); addChar('O'); 
-		addChar('D'); addChar('R'); addChar('O'); addChar('M'); addChar('M');
-
-		stringIndex = 0;
-
-		currentFrame = -1;
-		startFrame = 0;
-		// fbo
-		gl::Fbo::Format format;
-		//format.setSamples( 4 ); // uncomment this to enable 4x antialiasing
-		mFbo = gl::Fbo::create(mWidth, mHeight, format.depthTexture());
-#endif	
 	}
-	void TextureText::setString(string aString) {
-		mStrings.push_back(aString);
-	}
-	void TextureText::fromXml(const XmlTree &xml)
+
+	void TextureImageSequence::fromXml(const XmlTree &xml)
 	{
-		mType = TEXT;
+		mType = IMAGESEQUENCE;
+		bool noValidFile = true; // if no valid files in the folder, we keep existing vector
+		string anyImagefileName = "0.jpg";
 		// retrieve attributes specific to this type of texture
-		mFilePathOrText = xml.getAttributeValue<string>("filepath", "");
-		if (mFilePathOrText.length() > 0) {
-			fs::path fullPath = getAssetPath("") / mFilePathOrText;// TODO / mVDSettings->mAssetsPath
+		mPath = xml.getAttributeValue<string>("path", "");
+		if (mPath.length() > 0) {
+			fs::path fullPath = getAssetPath("") / mPath;// TODO / mVDSettings->mAssetsPath
 			if (fs::exists(fullPath)) {
 
 				try {
-					mText = JsonTree(app::loadAsset(mFilePathOrText));// TODO / mVDSettings->mAssetsPath
-					mStrings.clear();
+					bool firstIndexFound = false;
+					int i = 0;
+					// loading 2000 files takes a while, I load only the first one
+					for (fs::directory_iterator it(fullPath); it != fs::directory_iterator(); ++it)
+					{
+						if (fs::is_regular_file(*it))
+						{
+							string fileName = it->path().filename().string();
+							if (fileName.find_last_of(".") != std::string::npos) {
+								int dotIndex = fileName.find_last_of(".");
+								mExt = fileName.substr(dotIndex + 1);
+								if (mExt == "png" || mExt == "jpg") {
+									anyImagefileName = fileName;
+								}
+								// get the prefix for the image sequence
+								// the files are named from p0000.jpg to p2253.jpg for instance
+								// sometimes only 3 digits : l000 this time
+								// find the first digit
+								int firstDigit = fileName.find_first_of("0123456789");
+								// if valid image sequence (contains a digit)
+								if (firstDigit > -1) {
+									mNumberOfDigits = dotIndex - firstDigit;
+									int prefixIndex = fileName.find_last_of(".") - mNumberOfDigits;//-4 or -3
+									mPrefix = fileName.substr(0, prefixIndex);
+									if (!firstIndexFound) {
+										firstIndexFound = true;
+										mNextIndexFrameToTry = std::stoi(fileName.substr(prefixIndex, dotIndex));
+									}
+								}
+							}
+							// only if proper image sequence
+							if (firstIndexFound) {
+								if (mExt == "png" || mExt == "jpg") {
+									if (noValidFile) {
+										// we found a valid file
+										noValidFile = false;
+										mSequenceTextures.clear();
+										// reset playhead to the start
+										//mPlayheadPosition = 0;
+										mLoadingFilesComplete = false;
+										loadNextImageFromDisk();
+										mPlaying = true;
+									}
+								}
+							}
 
-					for (const auto &line : mText["lines"]) {
-						mStrings.push_back(line.getValue());
+						}
 					}
-
-					CI_LOG_V("successfully loaded " + mFilePathOrText);
+					CI_LOG_V("successfully loaded " + mPath);
 				}
 				catch (Exception &exc) {
 					CI_LOG_EXCEPTION("error loading ", exc);
 				}
+				
+				// init: if no valid file found we take the default 0.jpg
+				if (noValidFile) {
+					if (anyImagefileName.length() > 0) {
+						mTexture = ci::gl::Texture::create(loadImage(loadAsset(anyImagefileName)), ci::gl::Texture::Format().loadTopDown(mTopDown));
+						mSequenceTextures.push_back(ci::gl::Texture::create(loadImage(loadAsset(anyImagefileName)), gl::Texture::Format().loadTopDown(mTopDown)));
+						mLoadingFilesComplete = true;
+						mFramesLoaded = 1;
+					}
+				}
 			}
 		}
 	}
-	XmlTree	TextureText::toXml() const {
+	XmlTree	TextureImageSequence::toXml() const {
 		XmlTree xml = VDTexture::toXml();
 
 		// add attributes specific to this type of texture
-		xml.setAttribute("filepath", mFilePathOrText);
+		xml.setAttribute("path", mPath);
 		return xml;
 	}
-	ci::gl::Texture2dRef TextureText::getTexture() {
-#if defined( CINDER_MSW )
-		// should be in update?
-		//addChar('O');
+	void TextureImageSequence::loadNextImageFromDisk() {
+		if (!mLoadingPaused) {
 
-		if (frame < mStrings[stringIndex].size() - 1) {
-			char c[2];
-			printf_s(c, "%s", mStrings[stringIndex].substr(frame, 1).c_str());
-			addChar(*c);
+			if (!mLoadingFilesComplete) {
+				// thank you Omar!
+				char restOfFileName[32];
+				if (mNumberOfDigits == 4) {
+
+					sprintf(restOfFileName, "%04d", mNextIndexFrameToTry);
+				}
+				else {
+
+					sprintf(restOfFileName, "%03d", mNextIndexFrameToTry);
+				}
+				string fileNameToLoad = mPrefix + restOfFileName + "." + mExt;
+				fs::path fileToLoad = getAssetPath("") / mPath / fileNameToLoad;
+				if (fs::exists(fileToLoad)) {
+					// start profiling
+					auto start = Clock::now();
+
+					mSequenceTextures.push_back(ci::gl::Texture::create(loadImage(fileToLoad), gl::Texture::Format().loadTopDown()));
+					mCurrentLoadedFrame = mFramesLoaded;
+					mFramesLoaded++;
+					auto end = Clock::now();
+					auto msdur = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+					int milli = msdur.count();
+
+					mStatus = fileToLoad.string() + " loaded in ms " + toString(milli);
+				}
+				else {
+
+					mStatus = fileToLoad.string() + " does not exist";
+					if (mFramesLoaded > 0) {
+						// if frames have been loaded we hit the last file of the image sequence at this point
+						mStatus = "last image loaded";
+						mLoadingFilesComplete = true;
+					}
+				}
+				
+				// increment counter for next filename
+				mNextIndexFrameToTry++;
+				if (mNextIndexFrameToTry > 9999 && mNumberOfDigits == 4) mLoadingFilesComplete = true;
+				if (mNextIndexFrameToTry > 999 && mNumberOfDigits == 3) mLoadingFilesComplete = true;
+			}
 		}
-		gl::ScopedFramebuffer fbScp(mFbo);
-		gl::clear(Color::black());
-		// setup the viewport to match the dimensions of the FBO
-		gl::ScopedViewport scpVp(ivec2(0), mFbo->getSize());
-		for (vector<Character>::iterator it = mCharacters.begin(); it != mCharacters.end(); ++it)
-			it->draw();
+	}
+	void TextureImageSequence::updateSequence() {
+		int newPosition;
+		// TODO check: getTexture()
+		if (mSequenceTextures.size() > 0) {
+			// Call on each frame to update the playhead
+			if (mPlaying) {
+				newPosition = mPlayheadPosition + (playheadFrameInc * mSpeed);
+				if (newPosition < 0) newPosition = mSequenceTextures.size() - 1;
+				if (newPosition > mSequenceTextures.size() - 1) newPosition = 0;
+			}
+			else {
+				if (mSyncToBeat) {
+					//newPosition = (int)(((int)(mVDAnimation->iBar / mVDAnimation->iBeatIndex)) % mSequenceTextures.size());
+					// TODO newPosition = (int)(((int)(mVDSettings->iBeat / mVDAnimation->iBeatIndex)) % mSequenceTextures.size());
+				}
+				else {
+					newPosition = mPlayheadPosition;
+				}
+			}
+			mPlayheadPosition = max(0, min(newPosition, (int)mSequenceTextures.size() - 1));
+		}
+	}
 
-		for (list<Character>::iterator it = mDyingCharacters.begin(); it != mDyingCharacters.end(); ++it)
-			it->draw();
+	ci::gl::Texture2dRef TextureImageSequence::getTexture() {
 
-		if ((!mDyingCharacters.empty()) && mDyingCharacters.front().isDead())
-			mDyingCharacters.pop_front();
-		return mFbo->getColorTexture();
-#else
+		if (mPlayheadPosition > mFramesLoaded) {
+			//error
+			mPlayheadPosition = 0;
+		}
+		if (!mLoadingFilesComplete) loadNextImageFromDisk();
+
+		if (mPlaying)  {
+			updateSequence();
+		}
+		mTexture = mSequenceTextures[mPlayheadPosition];
 		return mTexture;
-#endif		
-	}
-#if defined( CINDER_MSW )
-	void TextureText::addChar(char c)
-	{
-		if (c == 32) {
-			c = 97;
-		}
-		else {
-			c = toupper(c);
-		}
-		int count = mCharacters.size();
-
-		if (count > 0)
-			mSceneDestMatrix = glm::translate(mSceneDestMatrix, vec3(mCharacters.back().getKernBounds().getWidth() / 2.0f, 0.0f, 0.0f));
-
-		glm::mat4 randStartMatrix = mSceneDestMatrix;
-		randStartMatrix = glm::translate(randStartMatrix, vec3(300.0f));
-
-		mCharacters.push_back(Character(mTextureFont, string(&c, 1), randStartMatrix));
-
-		//mSceneDestMatrix.translate(vec3(mCharacters.back().getKernBounds().getWidth() / 2.0f, 0.0f, 0.0f));
-		mSceneDestMatrix = glm::translate(mSceneDestMatrix, vec3(mCharacters.back().getKernBounds().getWidth() / 2.0f, 0.0f, 0.0f));
-
-		float t = (count + 281) / 50.0f;
-		//mSceneDestMatrix.rotate(Vec3f(sin(t)*0.1f, cos(t)*0.2f, cos(t)*0.05f)); // makes the scene meander
-
-		mCharacters.back().animIn(timeline(), mSceneDestMatrix);
-
-		timeline().apply(&mSceneMatrix, mSceneDestMatrix, 1.0f, EaseOutAtan(10));
 
 	}
+	// play/pause sequence
+	void TextureImageSequence::playPauseSequence() {
 
-	void TextureText::removeChar()
-	{
-		if (!mCharacters.empty()) {
-			mDyingCharacters.push_back(mCharacters.back());
-			mCharacters.pop_back();
+		mPlaying = !mPlaying;
+	}
+	// sync to beat
+	void TextureImageSequence::syncToBeat() {
 
-			if (!mCharacters.empty())
-				mSceneDestMatrix = mCharacters.back().getDestMatrix();
-			else
-				mSceneDestMatrix = mat4(1.0f);
+		mSyncToBeat = !mSyncToBeat;
+	}
 
-			mat4 randStartMatrix = glm::translate( mSceneDestMatrix, vec3(300.0f));
-			//randStartMatrix.translate(300.0f);
+	// Stops playback and resets the playhead to zero
+	void TextureImageSequence::stopSequence() {
 
-			//randStartMatrix.rotate(getRandomVec3f(2.0f, 6.0f));
+		mPlaying = false;
+		mPlayheadPosition = 0;
+	}
 
-			mDyingCharacters.back().animOut(timeline(), randStartMatrix);
+	int TextureImageSequence::getMaxFrame() {
 
-			timeline().apply(&mSceneMatrix, mSceneDestMatrix, 1.0f, EaseOutAtan(10));
+		return mFramesLoaded;
+	}
+	int TextureImageSequence::getPlayheadPosition() {
+
+		return mPlayheadPosition;
+	}
+	// Seek to a new position in the sequence
+	void TextureImageSequence::setPlayheadPosition(int position) {
+
+		mPlayheadPosition = max(0, min(position, (int)mSequenceTextures.size() - 1));
+		if (!mLoadingFilesComplete) {
+			loadNextImageFromDisk();
 		}
 	}
-#else
 
-#endif
-	TextureText::~TextureText(void) {
+	void TextureImageSequence::reverseSequence() {
+		mSpeed *= -1;
+	}
+	int TextureImageSequence::getSpeed() {
+
+		return mSpeed;
+	}
+	void TextureImageSequence::setSpeed(int speed) {
+		mSpeed = speed;
+	}
+	bool TextureImageSequence::isLoadingFromDisk() {
+
+		return mLoadingFilesComplete;
+	}
+
+	void TextureImageSequence::toggleLoadingFromDisk() {
+
+		mLoadingPaused = !mLoadingPaused;
+	}
+	TextureImageSequence::~TextureImageSequence(void) {
 
 	}
 
@@ -380,7 +480,7 @@ namespace VideoDromm {
 	void TextureMovie::fromXml(const XmlTree &xml)
 	{
 		// retrieve attributes specific to this type of texture
-		mFilePathOrText = xml.getAttributeValue<string>("filepath", "");
+		mPath = xml.getAttributeValue<string>("path", "");
 		mType = MOVIE;
 
 	}
@@ -388,7 +488,7 @@ namespace VideoDromm {
 		XmlTree xml = VDTexture::toXml();
 
 		// add attributes specific to this type of texture
-		xml.setAttribute("filepath", mFilePathOrText);
+		xml.setAttribute("path", mPath);
 		return xml;
 	}
 	ci::gl::Texture2dRef TextureMovie::getTexture() {
@@ -415,7 +515,7 @@ namespace VideoDromm {
 	void TextureCamera::fromXml(const XmlTree &xml)
 	{
 		// retrieve attributes specific to this type of texture
-		mFilePathOrText = xml.getAttributeValue<string>("filepath", "");
+		mPath = xml.getAttributeValue<string>("path", "");
 		mType = CAMERA;
 
 	}
