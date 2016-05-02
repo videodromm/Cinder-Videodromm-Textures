@@ -402,16 +402,19 @@ namespace VideoDromm {
 
 	ci::gl::Texture2dRef TextureImageSequence::getTexture() {
 
-		if (mPlayheadPosition > mFramesLoaded) {
-			//error
-			mPlayheadPosition = 0;
-		}
-		if (!mLoadingFilesComplete) loadNextImageFromDisk();
+		if (mSequenceTextures.size() > 0) {
 
-		if (mPlaying)  {
-			updateSequence();
+			if (mPlayheadPosition > mFramesLoaded) {
+				//error
+				mPlayheadPosition = 0;
+			}
+			if (!mLoadingFilesComplete) loadNextImageFromDisk();
+
+			if (mPlaying)  {
+				updateSequence();
+			}
+			mTexture = mSequenceTextures[mPlayheadPosition];
 		}
-		mTexture = mSequenceTextures[mPlayheadPosition];
 		return mTexture;
 
 	}
