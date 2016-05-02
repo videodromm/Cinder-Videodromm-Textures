@@ -8,6 +8,8 @@
 #include "cinder/Capture.h"
 #include "cinder/Log.h"
 #include "cinder/Timeline.h"
+// hap codec movie
+#include "MovieHap.h"
 
 #include <atomic>
 #include <vector>
@@ -174,7 +176,10 @@ namespace VideoDromm
 		//! 
 		virtual ci::gl::Texture2dRef	getTexture() override;
 	private:
-		//ci::gl::Texture2dRef	mTexture;
+		qtime::MovieGlHapRef		mMovie;
+		void						loadMovieFile(const fs::path &path);
+		bool						mLoopVideo;
+		ci::gl::Texture2dRef		mTexture;
 	};
 	// ---- TextureCamera ------------------------------------------------
 
@@ -204,7 +209,6 @@ namespace VideoDromm
 		void printDevices();
 		string					mFirstCameraDeviceName;
 		CaptureRef				mCapture;
-		//ci::gl::Texture2dRef	mTexture;
 	};
 #else
 

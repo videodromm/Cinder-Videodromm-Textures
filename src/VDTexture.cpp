@@ -482,10 +482,19 @@ namespace VideoDromm {
 	}
 	void TextureMovie::fromXml(const XmlTree &xml)
 	{
-		// retrieve attributes specific to this type of texture
-		mPath = xml.getAttributeValue<string>("path", "");
 		mType = MOVIE;
-
+		// retrieve attributes specific to this type of texture
+		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
+		mPath = xml.getAttributeValue<string>("path", "");
+		if (mPath.length() > 0) {
+			fs::path fullPath = getAssetPath("") / mPath;// TODO / mVDSettings->mAssetsPath
+			if (fs::exists(fullPath)) {
+				loadMovieFile(fullPath);
+			}
+			else {
+				mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
+			}
+		}
 	}
 	XmlTree	TextureMovie::toXml() const {
 		XmlTree xml = VDTexture::toXml();
@@ -494,7 +503,27 @@ namespace VideoDromm {
 		xml.setAttribute("path", mPath);
 		return xml;
 	}
+	void TextureMovie::loadMovieFile(const fs::path &moviePath)
+	{
+		try {
+			mMovie.reset();
+			// load up the movie, set it to loop, and begin playing
+			mMovie = qtime::MovieGlHap::create(moviePath);
+			mLoopVideo = (mMovie->getDuration() < 30.0f);
+			mMovie->setLoop(mLoopVideo);
+			mMovie->play();
+		}
+		catch (ci::Exception &e)
+		{
+			console() << string(e.what()) << std::endl;
+			console() << "Unable to load the movie." << std::endl;
+		}
+
+	}
 	ci::gl::Texture2dRef TextureMovie::getTexture() {
+		if (mMovie) {
+			mTexture = mMovie->getTexture();
+		}
 		return mTexture;
 	}
 	TextureMovie::~TextureMovie(void) {
