@@ -23,6 +23,18 @@
 #include "cinderSyphon.h"
 #endif
 
+// audio
+#include "cinder/audio/Context.h"
+#include "cinder/audio/MonitorNode.h"
+#include "cinder/audio/Utilities.h"
+#include "cinder/audio/Source.h"
+#include "cinder/audio/Target.h"
+#include "cinder/audio/dsp/Converter.h"
+#include "cinder/audio/SamplePlayerNode.h"
+#include "cinder/audio/SampleRecorderNode.h"
+#include "cinder/audio/NodeEffects.h"
+#include "cinder/Rand.h"
+
 #include <atomic>
 #include <vector>
 
@@ -32,6 +44,9 @@ using namespace std;
 
 namespace VideoDromm
 {
+	/*
+	** ---- Texture parent class ------------------------------------------------
+	*/
 	// stores the pointer to the VDTexture instance
 	typedef std::shared_ptr<class VDTexture> 	VDTextureRef;
 	typedef std::vector<VDTextureRef>			VDTextureList;
@@ -40,7 +55,7 @@ namespace VideoDromm
 
 	class VDTexture: public std::enable_shared_from_this < VDTexture > {
 	public:
-		typedef enum { UNKNOWN, IMAGE, IMAGESEQUENCE, MOVIE, CAMERA, SHARED } TextureType;
+		typedef enum { UNKNOWN, IMAGE, IMAGESEQUENCE, MOVIE, CAMERA, SHARED, AUDIO } TextureType;
 	public:
 		VDTexture( TextureType aType = UNKNOWN);
 		virtual ~VDTexture( void );
@@ -82,8 +97,9 @@ namespace VideoDromm
 		//! Texture
 		ci::gl::Texture2dRef			mTexture;
 	};
-
-	// ---- TextureImage ------------------------------------------------
+	/*
+	** ---- TextureImage ------------------------------------------------
+	*/
 	typedef std::shared_ptr<class TextureImage>	TextureImageRef;
 
 	class TextureImage
@@ -106,7 +122,9 @@ namespace VideoDromm
 		virtual ci::gl::Texture2dRef	getTexture() override;
 	};
 
-	// ---- TextureImageSequence ------------------------------------------------
+	/*
+	** ---- TextureImageSequence ------------------------------------------------
+	*/
 	typedef std::shared_ptr<class TextureImageSequence>	TextureImageSequenceRef;
 
 	class TextureImageSequence
@@ -162,7 +180,9 @@ namespace VideoDromm
 		vector<ci::gl::TextureRef>	mSequenceTextures;
 	};
 
-	// ---- TextureMovie ------------------------------------------------
+	/*
+	** ---- TextureMovie ------------------------------------------------
+	*/	
 	typedef std::shared_ptr<class TextureMovie>	TextureMovieRef;
 
 	class TextureMovie
@@ -195,8 +215,9 @@ namespace VideoDromm
 		bool						mLoopVideo;
 		ci::gl::Texture2dRef		mTexture;
 	};
-	// ---- TextureCamera ------------------------------------------------
-
+	/*
+	** ---- TextureCamera ------------------------------------------------
+	*/
 #if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
 	typedef std::shared_ptr<class TextureCamera>	TextureCameraRef;
 
@@ -225,7 +246,9 @@ namespace VideoDromm
 		CaptureRef				mCapture;
 	};
 #endif
-	// ---- TextureShared ------------------------------------------------
+	/*
+	** ---- TextureShared ------------------------------------------------
+	*/
 	typedef std::shared_ptr<class TextureShared>	TextureSharedRef;
 
 	class TextureShared
@@ -251,7 +274,7 @@ namespace VideoDromm
 #if defined( CINDER_MSW )
 		// -------- SPOUT -------------
 		SpoutReceiver spoutreceiver;                // Create a Spout receiver object
-		bool bInitialized;                          // true if a sender initializes OK
+		bool initialized;							// true if a sender initializes OK
 		bool bDoneOnce;                             // only try to initialize once
 		bool bMemoryMode;                           // tells us if texture share compatible
 		unsigned int g_Width, g_Height;             // size of the texture being sent out
@@ -261,5 +284,57 @@ namespace VideoDromm
 		syphonClient				mClientSyphon;
 #endif
 		ci::gl::Texture2dRef		mTexture;
+	};
+	/* 
+	** ---- TextureAudio ------------------------------------------------ 
+	*/
+	typedef std::shared_ptr<class TextureAudio>	TextureAudioRef;
+
+	class TextureAudio
+		: public VDTexture {
+	public:
+		//
+		static TextureAudioRef			create() { return std::make_shared<TextureAudio>(); }
+		//!
+		void							fromXml(const XmlTree &xml) override;
+		//!
+		virtual	XmlTree					toXml() const override;
+		void							loadWaveFile(string aFilePath);
+		float*							getSmallSpectrum() { return arr; };
+
+	public:
+		TextureAudio();
+		virtual ~TextureAudio(void);
+
+		//! returns a shared pointer 
+		TextureAudioRef					getPtr() { return std::static_pointer_cast<TextureAudio>(shared_from_this()); }
+	protected:
+		//! 
+		virtual ci::gl::Texture2dRef	getTexture() override;
+	private:
+		// init
+		bool							initialized;
+		// audio
+		audio::InputDeviceNodeRef		mLineIn;
+		audio::MonitorSpectralNodeRef	mMonitorLineInSpectralNode;
+		audio::MonitorSpectralNodeRef	mMonitorWaveSpectralNode;
+		audio::SamplePlayerNodeRef		mSamplePlayerNode;
+		audio::SourceFileRef			mSourceFile;
+		audio::MonitorSpectralNodeRef	mScopeLineInFmt;
+
+		vector<float>					mMagSpectrum;
+
+		float							arr[7];
+		// number of frequency bands of our spectrum
+		static const int				kBands = 1024;
+
+		// textures
+		unsigned char					dTexture[1024];
+		ci::gl::Texture2dRef			mTexture;
+		bool							mUseLineIn;
+		float							maxVolume;
+		float							audioMultFactor;
+		float							*mData;
+		float							iFreqs[4];
 	};
 }

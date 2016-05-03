@@ -95,6 +95,11 @@ namespace VideoDromm {
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 				}
+				else if (texturetype == "audio") {
+					TextureAudioRef t(new TextureAudio());
+					t->fromXml(detailsXml);
+					vdtexturelist.push_back(t);
+				}
 				else {
 					// unknown texture type
 					CI_LOG_V("unknown texture type");
@@ -141,7 +146,9 @@ namespace VideoDromm {
 			case IMAGE: texture.setAttribute("texturetype", "image"); break;
 			case IMAGESEQUENCE: texture.setAttribute("texturetype", "imagesequence"); break;
 			case MOVIE: texture.setAttribute("texturetype", "movie"); break;
+			case SHARED: texture.setAttribute("texturetype", "shared"); break;
 			case CAMERA: texture.setAttribute("texturetype", "camera"); break;
+			case AUDIO: texture.setAttribute("texturetype", "audio"); break;
 			default: texture.setAttribute("texturetype", "unknown"); break;
 			}
 			// details specific to texture type
@@ -202,7 +209,10 @@ namespace VideoDromm {
 		return mTexture;
 	}
 	/*
-	*   child classes
+	**   Child classes
+	*/
+	/*
+	**   TextureImage for jpg, png
 	*/
 	TextureImage::TextureImage() {
 	}
@@ -240,7 +250,10 @@ namespace VideoDromm {
 	}
 	TextureImage::~TextureImage(void) {
 	}
-	// TextureImageSequence
+
+	/*
+	** TextureImageSequence
+	*/
 	TextureImageSequence::TextureImageSequence() {
 		// constructor
 		playheadFrameInc = 1;
@@ -267,6 +280,7 @@ namespace VideoDromm {
 		string anyImagefileName = "0.jpg";
 		// retrieve attributes specific to this type of texture
 		mPath = xml.getAttributeValue<string>("path", "");
+		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
 		if (mPath.length() > 0) {
 			fs::path fullPath = getAssetPath("") / mPath;// TODO / mVDSettings->mAssetsPath
 			if (fs::exists(fullPath)) {
@@ -343,6 +357,7 @@ namespace VideoDromm {
 
 		// add attributes specific to this type of texture
 		xml.setAttribute("path", mPath);
+		xml.setAttribute("topdown", mTopDown);
 		return xml;
 	}
 	void TextureImageSequence::loadNextImageFromDisk() {
@@ -490,7 +505,10 @@ namespace VideoDromm {
 
 	}
 
-	// TextureMovie
+
+	/*
+	** ---- TextureMovie ------------------------------------------------
+	*/
 	TextureMovie::TextureMovie() {
 
 	}
@@ -515,6 +533,7 @@ namespace VideoDromm {
 
 		// add attributes specific to this type of texture
 		xml.setAttribute("path", mPath);
+		xml.setAttribute("topdown", mTopDown);
 		return xml;
 	}
 	void TextureMovie::loadMovieFile(const fs::path &moviePath)
@@ -550,7 +569,9 @@ namespace VideoDromm {
 
 	}
 
-	// TextureCamera
+	/*
+	** ---- TextureCamera ------------------------------------------------
+	*/
 #if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
 	TextureCamera::TextureCamera() {
 		mFirstCameraDeviceName = "";
@@ -576,6 +597,8 @@ namespace VideoDromm {
 
 		// add attributes specific to this type of texture
 		xml.setAttribute("camera", mFirstCameraDeviceName);
+		xml.setAttribute("topdown", mTopDown);
+		xml.setAttribute("path", mPath);
 		return xml;
 	}
 	ci::gl::Texture2dRef TextureCamera::getTexture() {
@@ -606,10 +629,12 @@ namespace VideoDromm {
 	}
 #endif
 
-	// TextureShared
+	/*
+	** ---- TextureShared ------------------------------------------------
+	*/
 	TextureShared::TextureShared() {
 #if defined( CINDER_MSW )
-		bInitialized = false;
+		initialized = false;
 		g_Width = 320; // set global width and height to something
 		g_Height = 240; // they need to be reset when the receiver connects to a sender
 
@@ -632,6 +657,7 @@ namespace VideoDromm {
 
 		// add attributes specific to this type of texture
 		xml.setAttribute("path", mPath);
+		xml.setAttribute("topdown", mTopDown);
 		return xml;
 	}
 
@@ -640,7 +666,7 @@ namespace VideoDromm {
 		unsigned int width, height;
 
 		// -------- SPOUT -------------
-		if (!bInitialized) {
+		if (!initialized) {
 
 			// This is a receiver, so the initialization is a little more complex than a sender
 			// The receiver will attempt to connect to the name it is sent.
@@ -673,7 +699,7 @@ namespace VideoDromm {
 					mWidth = g_Width;
 					mHeight = g_Height;
 				}
-				bInitialized = true;
+				initialized = true;
 			}
 			else {
 				// Receiver initialization will fail if no senders are running
@@ -681,7 +707,7 @@ namespace VideoDromm {
 			}
 		} // endif not initialized
 		// ----------------------------
-		if (bInitialized) {
+		if (initialized) {
 			if (spoutreceiver.ReceiveTexture(SenderName, width, height, mTexture->getId(), mTexture->getTarget())) {
 				//  Width and height are changed for sender change so the local texture has to be resized.
 				if (width != g_Width || height != g_Height) {
@@ -699,15 +725,174 @@ namespace VideoDromm {
 		}
 #endif
 #if defined( CINDER_MAC )
-			mClientSyphon.draw(vec2(0.f, 0.f));
+		mClientSyphon.draw(vec2(0.f, 0.f));
 #endif
-			return mTexture;
-		}
-		TextureShared::~TextureShared(void) {
+		return mTexture;
+	}
+	TextureShared::~TextureShared(void) {
 #if defined( CINDER_MSW )
-			spoutreceiver.ReleaseReceiver();
+		spoutreceiver.ReleaseReceiver();
 #endif
 
+	}
+
+	/*
+	** ---- TextureAudio ------------------------------------------------
+	*/
+	TextureAudio::TextureAudio() {
+		initialized = false;
+		for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
+		mTexture = gl::Texture::create(dTexture, 0x1909, 512, 2); //#define GL_LUMINANCE 0x1909
+
+		audioMultFactor = 1.0f;
+		mData = new float[1024];
+		for (int i = 0; i < 1024; i++)
+		{
+			mData[i] = 0;
+		}
+		for (int i = 0; i < 4; i++)
+		{
+			iFreqs[i] = i;
+		}
+	}
+	XmlTree	TextureAudio::toXml() const {
+		XmlTree xml = VDTexture::toXml();
+
+		// add attributes specific to this type of texture
+		xml.setAttribute("path", mPath);
+		xml.setAttribute("topdown", mTopDown);
+		xml.setAttribute("uselinein", mUseLineIn);
+
+		return xml;
+	}
+
+	void TextureAudio::fromXml(const XmlTree &xml)
+	{
+		VDTexture::fromXml(xml);
+		mType = AUDIO;
+		// retrieve attributes specific to this type of texture
+		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
+		mUseLineIn = xml.getAttributeValue<bool>("uselinein", "true");
+		mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
+	}
+	void TextureAudio::loadWaveFile(string aFilePath)
+	{
+		try {
+			if (fs::exists(aFilePath)) {
+
+				auto ctx = audio::master();
+				mSourceFile = audio::load(loadFile(aFilePath), audio::master()->getSampleRate());
+				mSamplePlayerNode = ctx->makeNode(new audio::FilePlayerNode(mSourceFile, false));
+				mSamplePlayerNode->setLoopEnabled(false);
+				mSamplePlayerNode >> mMonitorWaveSpectralNode >> ctx->getOutput();
+				mSamplePlayerNode->enable();
+
+				mSamplePlayerNode->seek(0);
+
+				auto filePlayer = dynamic_pointer_cast<audio::FilePlayerNode>(mSamplePlayerNode);
+				CI_ASSERT_MSG(filePlayer, "expected sample player to be either BufferPlayerNode or FilePlayerNode");
+
+				filePlayer->setSourceFile(mSourceFile);
+
+				mSamplePlayerNode->start();
+				mUseLineIn = false;
+			}
+		}
+		catch (...) {
+			CI_LOG_W("could not open wavefile");
+		}
+	}
+
+
+	ci::gl::Texture2dRef TextureAudio::getTexture() {
+
+		if (!initialized) {
+			if (mUseLineIn) {
+				auto ctx = audio::Context::master();
+				// linein
+				CI_LOG_W("trying to open mic/line in, if no line follows in the log, the app crashed so put UseLineIn to false in the textures.xml file");
+				mLineIn = ctx->createInputDeviceNode(); //crashes if linein is present but disabled, doesn't go to catch block
+				CI_LOG_V("mic/line in opened");
+
+				auto scopeLineInFmt = audio::MonitorSpectralNode::Format().fftSize(512).windowSize(256);
+				mMonitorLineInSpectralNode = ctx->makeNode(new audio::MonitorSpectralNode(scopeLineInFmt));
+				mLineIn >> mMonitorLineInSpectralNode;
+				mLineIn->enable();
+				ctx->enable();
+			}
+			initialized = true;
 		}
 
-	} // namespace VideoDromm
+		if (mUseLineIn) {
+			mMagSpectrum = mMonitorLineInSpectralNode->getMagSpectrum();
+		}
+		else {
+			if (mSamplePlayerNode) mMagSpectrum = mMonitorWaveSpectralNode->getMagSpectrum();
+		}
+
+		if (!mMagSpectrum.empty()) {
+
+			unsigned char signal[kBands];
+			maxVolume = 0.0;
+			size_t mDataSize = mMagSpectrum.size();
+			if (mDataSize > 0 && mDataSize < 2048)
+			{
+				float mv;
+				float db;
+				float maxdb = 0.0f;
+				for (size_t i = 0; i < mDataSize; i++) {
+					float f = mMagSpectrum[i];
+					db = audio::linearToDecibel(f);
+					f = db * audioMultFactor;
+					if (f > maxVolume)
+					{
+						maxVolume = f; mv = f;
+					}
+					mData[i] = f;
+					int ger = f;
+					signal[i] = static_cast<unsigned char>(ger);
+
+					if (db > maxdb) maxdb = db;
+
+					switch (i)
+					{
+					case 11:
+						iFreqs[0] = f;
+						arr[0] = f;
+						break;
+					case 13:
+						iFreqs[1] = f;
+						arr[1] = f;
+						break;
+					case 15:
+						iFreqs[2] = f;
+						arr[2] = f;
+						break;
+					case 18:
+						iFreqs[3] = f;
+						arr[3] = f;
+						break;
+					case 25:
+						arr[4] = f;
+						break;
+					case 30:
+						arr[5] = f;
+						break;
+					case 35:
+						arr[6] = f;
+						break;
+					default:
+						break;
+					}
+				}
+				// store it as a 512x2 texture in UPDATE only!!
+				mTexture = gl::Texture::create(signal, 0x1909, 512, 2); //#define GL_LUMINANCE 0x1909
+			}
+		}
+
+		return mTexture;
+	}
+	TextureAudio::~TextureAudio(void) {
+	}
+
+} // namespace VideoDromm
