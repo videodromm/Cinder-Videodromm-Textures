@@ -79,18 +79,32 @@ namespace VideoDromm {
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 #else
-					// unknown texture type
+					// camera not supported on this platform
 					CI_LOG_V("camera not supported on this platform");
-					TextureImageRef t(new TextureImage());
-					t->fromXml(detailsXml);
+					XmlTree		xml;
+					xml.setTag("details");
+					xml.setAttribute("path", "0.jpg");
+					xml.setAttribute("width", 640);
+					xml.setAttribute("height", 480);
+					t->fromXml(xml);
 					vdtexturelist.push_back(t);
 #endif
+				}
+				else if (texturetype == "shared") {
+					TextureSharedRef t(new TextureShared());
+					t->fromXml(detailsXml);
+					vdtexturelist.push_back(t);
 				}
 				else {
 					// unknown texture type
 					CI_LOG_V("unknown texture type");
 					TextureImageRef t(new TextureImage());
-					t->fromXml(detailsXml);
+					XmlTree		xml;
+					xml.setTag("details");
+					xml.setAttribute("path", "0.jpg");
+					xml.setAttribute("width", 640);
+					xml.setAttribute("height", 480);
+					t->fromXml(xml);
 					vdtexturelist.push_back(t);
 				}
 			}
@@ -311,7 +325,7 @@ namespace VideoDromm {
 				catch (Exception &exc) {
 					CI_LOG_EXCEPTION("error loading ", exc);
 				}
-				
+
 				// init: if no valid file found we take the default 0.jpg
 				if (noValidFile) {
 					if (anyImagefileName.length() > 0) {
@@ -369,7 +383,7 @@ namespace VideoDromm {
 						mLoadingFilesComplete = true;
 					}
 				}
-				
+
 				// increment counter for next filename
 				mNextIndexFrameToTry++;
 				if (mNextIndexFrameToTry > 9999 && mNumberOfDigits == 4) mLoadingFilesComplete = true;
@@ -508,6 +522,12 @@ namespace VideoDromm {
 		try {
 			mMovie.reset();
 			// load up the movie, set it to loop, and begin playing
+#if defined( CINDER_MSW )
+			mMovie = qtime::MovieGlHap::create(moviePath);
+#endif
+#if defined( CINDER_MAC )
+			mMovie = qtime::MovieGl::create( moviePath );
+#endif
 			mMovie = qtime::MovieGlHap::create(moviePath);
 			mLoopVideo = (mMovie->getDuration() < 30.0f);
 			mMovie->setLoop(mLoopVideo);
@@ -584,7 +604,110 @@ namespace VideoDromm {
 	TextureCamera::~TextureCamera(void) {
 
 	}
-#else
+#endif
+
+	// TextureShared
+	TextureShared::TextureShared() {
+#if defined( CINDER_MSW )
+		bInitialized = false;
+		g_Width = 320; // set global width and height to something
+		g_Height = 240; // they need to be reset when the receiver connects to a sender
 
 #endif
-} // namespace VideoDromm
+#if defined( CINDER_MAC )
+		mClientSyphon.setup();
+		mClientSyphon.set("", "Videodromm client");
+		mClientSyphon.bind();
+#endif
+	}
+	void TextureShared::fromXml(const XmlTree &xml)
+	{
+		mType = SHARED;
+		// retrieve attributes specific to this type of texture
+		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
+		mPath = xml.getAttributeValue<string>("path", "");
+	}
+	XmlTree	TextureShared::toXml() const {
+		XmlTree xml = VDTexture::toXml();
+
+		// add attributes specific to this type of texture
+		xml.setAttribute("path", mPath);
+		return xml;
+	}
+
+	ci::gl::Texture2dRef TextureShared::getTexture() {
+#if defined( CINDER_MSW )
+		unsigned int width, height;
+
+		// -------- SPOUT -------------
+		if (!bInitialized) {
+
+			// This is a receiver, so the initialization is a little more complex than a sender
+			// The receiver will attempt to connect to the name it is sent.
+			// Alternatively set the optional bUseActive flag to attempt to connect to the active sender. 
+			// If the sender name is not initialized it will attempt to find the active sender
+			// If the receiver does not find any senders the initialization will fail
+			// and "CreateReceiver" can be called repeatedly until a sender is found.
+			// "CreateReceiver" will update the passed name, and dimensions.
+			SenderName[0] = NULL; // the name will be filled when the receiver connects to a sender
+			width = g_Width; // pass the initial width and height (they will be adjusted if necessary)
+			height = g_Height;
+
+			// Optionally set for DirectX 9 instead of default DirectX 11 functions
+			// spoutreceiver.SetDX9(true);  
+
+			// Initialize a receiver
+			if (spoutreceiver.CreateReceiver(SenderName, width, height, true)) { // true to find the active sender
+				// Optionally test for texture share compatibility
+				// bMemoryMode informs us whether Spout initialized for texture share or memory share
+				bMemoryMode = spoutreceiver.GetMemoryShareMode();
+
+				// Is the size of the detected sender different from the current texture size ?
+				// This is detected for both texture share and memoryshare
+				if (width != g_Width || height != g_Height) {
+					// Reset the global width and height
+					g_Width = width;
+					g_Height = height;
+					// Reset the local receiving texture size
+					mTexture = gl::Texture::create(g_Width, g_Height);
+					mWidth = g_Width;
+					mHeight = g_Height;
+				}
+				bInitialized = true;
+			}
+			else {
+				// Receiver initialization will fail if no senders are running
+				// Keep trying until one starts
+			}
+		} // endif not initialized
+		// ----------------------------
+		if (bInitialized) {
+			if (spoutreceiver.ReceiveTexture(SenderName, width, height, mTexture->getId(), mTexture->getTarget())) {
+				//  Width and height are changed for sender change so the local texture has to be resized.
+				if (width != g_Width || height != g_Height) {
+					// The sender dimensions have changed - update the global width and height
+					g_Width = width;
+					g_Height = height;
+					// Update the local texture to receive the new dimensions
+					mTexture = gl::Texture::create(g_Width, g_Height);
+					// reset render window
+					setWindowSize(g_Width, g_Height);
+					return mTexture; // quit for next round
+				}
+				// received OK
+			}
+		}
+#endif
+#if defined( CINDER_MAC )
+			mClientSyphon.draw(vec2(0.f, 0.f));
+#endif
+			return mTexture;
+		}
+		TextureShared::~TextureShared(void) {
+#if defined( CINDER_MSW )
+			spoutreceiver.ReleaseReceiver();
+#endif
+
+		}
+
+	} // namespace VideoDromm

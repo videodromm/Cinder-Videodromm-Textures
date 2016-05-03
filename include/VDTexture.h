@@ -8,8 +8,20 @@
 #include "cinder/Capture.h"
 #include "cinder/Log.h"
 #include "cinder/Timeline.h"
+
+#if defined( CINDER_MSW )
 // hap codec movie
 #include "MovieHap.h"
+// spout
+#include "spout.h"
+#endif
+
+#if defined( CINDER_MAC )
+// quicktime movie
+#include "cinder/qtime/QuickTimeGl.h"
+// syphon
+#include "cinderSyphon.h"
+#endif
 
 #include <atomic>
 #include <vector>
@@ -28,7 +40,7 @@ namespace VideoDromm
 
 	class VDTexture: public std::enable_shared_from_this < VDTexture > {
 	public:
-		typedef enum { UNKNOWN, IMAGE, IMAGESEQUENCE, MOVIE, CAMERA } TextureType;
+		typedef enum { UNKNOWN, IMAGE, IMAGESEQUENCE, MOVIE, CAMERA, SHARED } TextureType;
 	public:
 		VDTexture( TextureType aType = UNKNOWN);
 		virtual ~VDTexture( void );
@@ -63,8 +75,8 @@ namespace VideoDromm
 		TextureType						mType;
 		std::string						mPath;
 		bool							mTopDown;
-		int								mWidth;
-		int								mHeight;
+		unsigned int 					mWidth;
+		unsigned int					mHeight;
 		std::string						mStatus;
 
 		//! Texture
@@ -92,9 +104,6 @@ namespace VideoDromm
 	protected:
 		//! 
 		virtual ci::gl::Texture2dRef	getTexture() override;
-	private:
-		//ci::gl::Texture2dRef	mTexture;
-
 	};
 
 	// ---- TextureImageSequence ------------------------------------------------
@@ -176,7 +185,12 @@ namespace VideoDromm
 		//! 
 		virtual ci::gl::Texture2dRef	getTexture() override;
 	private:
+#if defined( CINDER_MSW )
 		qtime::MovieGlHapRef		mMovie;
+#endif
+#if defined( CINDER_MAC )
+		qtime::MovieGlRef			mMovie;
+#endif
 		void						loadMovieFile(const fs::path &path);
 		bool						mLoopVideo;
 		ci::gl::Texture2dRef		mTexture;
@@ -210,7 +224,42 @@ namespace VideoDromm
 		string					mFirstCameraDeviceName;
 		CaptureRef				mCapture;
 	};
-#else
-
 #endif
+	// ---- TextureShared ------------------------------------------------
+	typedef std::shared_ptr<class TextureShared>	TextureSharedRef;
+
+	class TextureShared
+		: public VDTexture {
+	public:
+		//
+		static TextureSharedRef create() { return std::make_shared<TextureShared>(); }
+		//!
+		void				fromXml(const XmlTree &xml) override;
+		//!
+		virtual	XmlTree	toXml() const override;
+
+	public:
+		TextureShared();
+		virtual ~TextureShared(void);
+
+		//! returns a shared pointer 
+		TextureSharedRef	getPtr() { return std::static_pointer_cast<TextureShared>(shared_from_this()); }
+	protected:
+		//! 
+		virtual ci::gl::Texture2dRef	getTexture() override;
+	private:
+#if defined( CINDER_MSW )
+		// -------- SPOUT -------------
+		SpoutReceiver spoutreceiver;                // Create a Spout receiver object
+		bool bInitialized;                          // true if a sender initializes OK
+		bool bDoneOnce;                             // only try to initialize once
+		bool bMemoryMode;                           // tells us if texture share compatible
+		unsigned int g_Width, g_Height;             // size of the texture being sent out
+		char SenderName[256];                       // sender name 
+#endif
+#if defined( CINDER_MAC )
+		syphonClient				mClientSyphon;
+#endif
+		ci::gl::Texture2dRef		mTexture;
+	};
 }

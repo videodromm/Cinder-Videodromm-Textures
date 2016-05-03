@@ -6,4 +6,13 @@
 	<texture id="2" texturetype="imagesequence">
 		<details path="mandalas" width="640" height="480"/>
 	</texture>
+	<texture id="3" texturetype="movie">
+		<details path="pupilles640x480.hap.mov" width="640" height="480" topdown="1"/>
+	</texture>
+	<texture id="4" texturetype="shared">
+		<details path="0.jpg" width="640" height="480" topdown="1"/>
+	</texture>
+	<texture id="5" texturetype="audio">
+		<details path="0.jpg" width="640" height="480" topdown="1"/>
+	</texture>
 </textures>

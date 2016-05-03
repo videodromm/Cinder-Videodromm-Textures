@@ -8,7 +8,7 @@
     version="1.0"
 	summary="Videodromm block for Cinder 0.9"
 	url="https://github.com/Videodromm/Cinder-Videodromm-Textures"
-	git="git://github.com/brucelane/Cinder-Videodromm-Textures.git"
+	git="git://github.com/Videodromm/Cinder-Videodromm-Textures.git"
 	>
 	<supports os="msw" />
   	<supports os="macosx" />
@@ -19,7 +19,10 @@
 	<sourcePattern>src/*.cpp</sourcePattern>
 	<sourcePattern>src/*.c</sourcePattern>
 	<platform os="msw">
-		<libraryPath>lib</libraryPath>
+		<requires>org.libcinder.hap2</requires>
+	</platform>
+	<platform os="macosx">
+		<requires>info.v002.syphon</requires>
 	</platform>
 </block>
 <template>templates/Videodromm-Textures/template.xml</template>
