@@ -322,7 +322,7 @@ namespace VideoDromm {
 									// TODO only store folder relative to assets, not full path 
 									size_t found = fullPath.string().find_last_of("/\\");
 									mPath = fullPath.string().substr(found + 1);
-									
+
 									// reset playhead to the start
 									//mPlayheadPosition = 0;
 									mLoadingFilesComplete = false;
@@ -785,6 +785,7 @@ namespace VideoDromm {
 	}
 	void TextureAudio::loadFromFullPath(string aPath)
 	{
+		CI_LOG_V("TextureAudio::loadFromFullPath: " + aPath);
 		try {
 			if (fs::exists(aPath)) {
 
@@ -815,8 +816,9 @@ namespace VideoDromm {
 	ci::gl::Texture2dRef TextureAudio::getTexture() {
 
 		if (!initialized) {
+			CI_LOG_V("TextureAudio::getTexture() init");
+			auto ctx = audio::Context::master();
 			if (mUseLineIn) {
-				auto ctx = audio::Context::master();
 				// linein
 				CI_LOG_W("trying to open mic/line in, if no line follows in the log, the app crashed so put UseLineIn to false in the textures.xml file");
 				mLineIn = ctx->createInputDeviceNode(); //crashes if linein is present but disabled, doesn't go to catch block
@@ -826,12 +828,12 @@ namespace VideoDromm {
 				mMonitorLineInSpectralNode = ctx->makeNode(new audio::MonitorSpectralNode(scopeLineInFmt));
 				mLineIn >> mMonitorLineInSpectralNode;
 				mLineIn->enable();
-				// also initialize wave monitor
-				auto scopeWaveFmt = audio::MonitorSpectralNode::Format().fftSize(2048).windowSize(1024);
-				mMonitorWaveSpectralNode = ctx->makeNode(new audio::MonitorSpectralNode(scopeWaveFmt));
-
-				ctx->enable();
 			}
+			// also initialize wave monitor
+			auto scopeWaveFmt = audio::MonitorSpectralNode::Format().fftSize(2048).windowSize(1024);
+			mMonitorWaveSpectralNode = ctx->makeNode(new audio::MonitorSpectralNode(scopeWaveFmt));
+
+			ctx->enable();
 			initialized = true;
 		}
 
