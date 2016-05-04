@@ -826,6 +826,10 @@ namespace VideoDromm {
 				mMonitorLineInSpectralNode = ctx->makeNode(new audio::MonitorSpectralNode(scopeLineInFmt));
 				mLineIn >> mMonitorLineInSpectralNode;
 				mLineIn->enable();
+				// also initialize wave monitor
+				auto scopeWaveFmt = audio::MonitorSpectralNode::Format().fftSize(2048).windowSize(1024);
+				mMonitorWaveSpectralNode = ctx->makeNode(new audio::MonitorSpectralNode(scopeWaveFmt));
+
 				ctx->enable();
 			}
 			initialized = true;
