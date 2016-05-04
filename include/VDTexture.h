@@ -81,7 +81,7 @@ namespace VideoDromm
 		static VDTextureList			readSettings(const ci::DataSourceRef &source);
 		//! write a xml file
 		static void						writeSettings(const VDTextureList &vdtexturelist, const ci::DataTargetRef &target);
-		void							loadImageFromFileFullPath(string apath);
+		virtual void					loadFromFullPath(string aPath);
 		string							getStatus() { return mStatus; };
 	protected:
 		std::string						mName;
@@ -106,11 +106,13 @@ namespace VideoDromm
 		: public VDTexture {
 	public:
 		//
-		static TextureImageRef create() { return std::make_shared<TextureImage>(); }
+		static TextureImageRef	create() { return std::make_shared<TextureImage>(); }
 		//!
 		void					fromXml(const XmlTree &xml) override;
 		//!
 		virtual	XmlTree			toXml() const override;
+		virtual void			loadFromFullPath(string aPath) override;
+
 	public:
 		TextureImage();
 		virtual ~TextureImage(void);
@@ -136,6 +138,8 @@ namespace VideoDromm
 		void					fromXml(const XmlTree &xml) override;
 		//!
 		virtual	XmlTree			toXml() const override;
+		//!
+		virtual void			loadFromFullPath(string aPath) override;
 		TextureImageSequence();
 		virtual ~TextureImageSequence(void);
 
@@ -189,11 +193,13 @@ namespace VideoDromm
 		: public VDTexture {
 	public:
 		//
-		static TextureMovieRef create() { return std::make_shared<TextureMovie>(); }
+		static TextureMovieRef	create() { return std::make_shared<TextureMovie>(); }
 		//!
-		void				fromXml(const XmlTree &xml) override;
+		void					fromXml(const XmlTree &xml) override;
 		//!
-		virtual	XmlTree	toXml() const override;
+		virtual	XmlTree			toXml() const override;
+		//!
+		virtual void			loadFromFullPath(string aPath) override;
 
 	public:
 		TextureMovie();
@@ -211,7 +217,6 @@ namespace VideoDromm
 #if defined( CINDER_MAC )
 		qtime::MovieGlRef			mMovie;
 #endif
-		void						loadMovieFile(const fs::path &path);
 		bool						mLoopVideo;
 		ci::gl::Texture2dRef		mTexture;
 	};
@@ -294,13 +299,15 @@ namespace VideoDromm
 		: public VDTexture {
 	public:
 		//
-		static TextureAudioRef			create() { return std::make_shared<TextureAudio>(); }
+		static TextureAudioRef	create() { return std::make_shared<TextureAudio>(); }
 		//!
-		void							fromXml(const XmlTree &xml) override;
+		void					fromXml(const XmlTree &xml) override;
 		//!
-		virtual	XmlTree					toXml() const override;
-		void							loadWaveFile(string aFilePath);
-		float*							getSmallSpectrum() { return arr; };
+		virtual	XmlTree			toXml() const override;
+		//!
+		virtual void			loadFromFullPath(string aPath) override;
+
+		float*					getSmallSpectrum() { return arr; };
 
 	public:
 		TextureAudio();

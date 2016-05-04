@@ -12,12 +12,12 @@ using namespace VideoDromm;
 class _TBOX_PREFIX_App : public App {
 
 public:
-
-	void setup() override;
-	void mouseDown( MouseEvent event ) override;
-	void update() override;
-	void draw() override;
-	void cleanup() override;
+	void						setup() override;
+	void						mouseDown( MouseEvent event ) override;
+	void						update() override;
+	void						draw() override;
+	void						fileDrop(FileDropEvent event) override;
+	void						cleanup() override;
 private:
 	VDTextureList				mTexs;
 	fs::path					mTexturesFilepath;
@@ -28,7 +28,7 @@ private:
 void _TBOX_PREFIX_App::setup()
 {
 	// initialize 
-	mTexturesFilepath = getAssetPath("") / "textures.xml";
+	mTexturesFilepath = getAssetPath("") / "defaulttextures.xml";
 	if (fs::exists(mTexturesFilepath)) {
 		// load textures from file if one exists
 		mTexs = VDTexture::readSettings(loadFile(mTexturesFilepath));
@@ -39,7 +39,61 @@ void _TBOX_PREFIX_App::setup()
 
 	}
 }
+void _TBOX_PREFIX_App::fileDrop(FileDropEvent event)
+{
+	int index = 1;
+	string ext = "";
+	// use the last of the dropped files
+	boost::filesystem::path mPath = event.getFile(event.getNumFiles() - 1);
+	string mFile = mPath.string();
+	int dotIndex = mFile.find_last_of(".");
+	int slashIndex = mFile.find_last_of("\\");
+	bool found = false;
 
+	if (dotIndex != std::string::npos && dotIndex > slashIndex) ext = mFile.substr(mFile.find_last_of(".") + 1);
+
+	if (ext == "wav" || ext == "mp3")
+	{
+	}
+	else if (ext == "png" || ext == "jpg")
+	{
+		for (auto tex : mTexs)
+		{
+			if (!found) {
+				if (tex->getType() == VDTexture::IMAGE) {
+					tex->loadFromFullPath(mFile);
+					found = true;
+				}
+			}
+		}
+	}
+	else if (ext == "mov")
+	{
+		for (auto tex : mTexs)
+		{
+			if (!found) {
+				if (tex->getType() == VDTexture::MOVIE) {
+					tex->loadFromFullPath(mFile);
+					found = true;
+				}
+			}
+		}
+	}
+	else if (ext == "")
+	{
+		// try loading image sequence from dir
+		for (auto tex : mTexs)
+		{
+			if (!found) {
+				if (tex->getType() == VDTexture::IMAGESEQUENCE) {
+					tex->loadFromFullPath(mFile);
+					found = true;
+				}
+			}
+		}
+	}
+
+}
 void _TBOX_PREFIX_App::update()
 {
 

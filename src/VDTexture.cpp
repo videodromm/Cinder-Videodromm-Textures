@@ -32,7 +32,6 @@ namespace VideoDromm {
 
 	}
 
-
 	VDTextureList VDTexture::readSettings(const DataSourceRef &source)
 	{
 		XmlTree			doc;
@@ -175,11 +174,10 @@ namespace VideoDromm {
 
 	void VDTexture::fromXml(const XmlTree &xml)
 	{
-
 	}
-	void VDTexture::loadImageFromFileFullPath(string apath) {
-		mTexture = ci::gl::Texture::create(loadImage(apath), ci::gl::Texture::Format().loadTopDown(mTopDown));
-
+	void VDTexture::loadFromFullPath(string aPath) {
+		// initialize texture
+		mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
 	}
 	int VDTexture::getTextureWidth() {
 		return mWidth;
@@ -215,6 +213,7 @@ namespace VideoDromm {
 	**   TextureImage for jpg, png
 	*/
 	TextureImage::TextureImage() {
+		mType = IMAGE;
 	}
 	XmlTree	TextureImage::toXml() const {
 		XmlTree xml = VDTexture::toXml();
@@ -228,7 +227,6 @@ namespace VideoDromm {
 	void TextureImage::fromXml(const XmlTree &xml)
 	{
 		VDTexture::fromXml(xml);
-		mType = IMAGE;
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
 		mPath = xml.getAttributeValue<string>("path", "");
@@ -243,7 +241,9 @@ namespace VideoDromm {
 			}
 		}
 	}
-
+	void TextureImage::loadFromFullPath(string aPath) {
+		mTexture = ci::gl::Texture::create(loadImage(aPath), ci::gl::Texture::Format().loadTopDown(mTopDown));
+	}
 
 	ci::gl::Texture2dRef TextureImage::getTexture() {
 		return mTexture;
@@ -256,6 +256,7 @@ namespace VideoDromm {
 	*/
 	TextureImageSequence::TextureImageSequence() {
 		// constructor
+		mType = IMAGESEQUENCE;
 		playheadFrameInc = 1;
 		mLoadingFilesComplete = true;
 		mLoadingPaused = false;
@@ -272,84 +273,92 @@ namespace VideoDromm {
 		mSyncToBeat = false;
 
 	}
-
-	void TextureImageSequence::fromXml(const XmlTree &xml)
+	void TextureImageSequence::loadFromFullPath(string aPath)
 	{
-		mType = IMAGESEQUENCE;
 		bool noValidFile = true; // if no valid files in the folder, we keep existing vector
 		string anyImagefileName = "0.jpg";
+		string folder = "";
+		string fileName;
+		fs::path fullPath = aPath;
+		if (fs::exists(fullPath)) {
+			try {
+				bool firstIndexFound = false;
+				int i = 0;
+				// loading 2000 files takes a while, I load only the first one
+				for (fs::directory_iterator it(fullPath); it != fs::directory_iterator(); ++it)
+				{
+					if (fs::is_regular_file(*it))
+					{
+						fileName = it->path().filename().string();
+						if (fileName.find_last_of(".") != std::string::npos) {
+							int dotIndex = fileName.find_last_of(".");
+							mExt = fileName.substr(dotIndex + 1);
+							if (mExt == "png" || mExt == "jpg") {
+								anyImagefileName = fileName;
+							}
+							// get the prefix for the image sequence
+							// the files are named from p0000.jpg to p2253.jpg for instance
+							// sometimes only 3 digits : l000 this time
+							// find the first digit
+							int firstDigit = fileName.find_first_of("0123456789");
+							// if valid image sequence (contains a digit)
+							if (firstDigit > -1) {
+								mNumberOfDigits = dotIndex - firstDigit;
+								int prefixIndex = fileName.find_last_of(".") - mNumberOfDigits;//-4 or -3
+								mPrefix = fileName.substr(0, prefixIndex);
+								if (!firstIndexFound) {
+									firstIndexFound = true;
+									mNextIndexFrameToTry = std::stoi(fileName.substr(prefixIndex, dotIndex));
+								}
+							}
+						}
+						// only if proper image sequence
+						if (firstIndexFound) {
+							if (mExt == "png" || mExt == "jpg") {
+								if (noValidFile) {
+									// we found a valid file
+									noValidFile = false;
+									mSequenceTextures.clear();
+									// TODO only store folder relative to assets, not full path 
+									size_t found = fullPath.string().find_last_of("/\\");
+									mPath = fullPath.string().substr(found + 1);
+									
+									// reset playhead to the start
+									//mPlayheadPosition = 0;
+									mLoadingFilesComplete = false;
+									loadNextImageFromDisk();
+									mPlaying = true;
+								}
+							}
+						}
+
+					}
+				}
+				CI_LOG_V("successfully loaded " + mPath);
+			}
+			catch (Exception &exc) {
+				CI_LOG_EXCEPTION("error loading ", exc);
+			}
+
+			// init: if no valid file found we take the default 0.jpg
+			if (noValidFile) {
+				if (anyImagefileName.length() > 0) {
+					mTexture = ci::gl::Texture::create(loadImage(loadAsset(anyImagefileName)), ci::gl::Texture::Format().loadTopDown(mTopDown));
+					mSequenceTextures.push_back(ci::gl::Texture::create(loadImage(loadAsset(anyImagefileName)), gl::Texture::Format().loadTopDown(mTopDown)));
+					mLoadingFilesComplete = true;
+					mFramesLoaded = 1;
+				}
+			}
+		}
+	}
+	void TextureImageSequence::fromXml(const XmlTree &xml)
+	{
 		// retrieve attributes specific to this type of texture
 		mPath = xml.getAttributeValue<string>("path", "");
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
 		if (mPath.length() > 0) {
 			fs::path fullPath = getAssetPath("") / mPath;// TODO / mVDSettings->mAssetsPath
-			if (fs::exists(fullPath)) {
-
-				try {
-					bool firstIndexFound = false;
-					int i = 0;
-					// loading 2000 files takes a while, I load only the first one
-					for (fs::directory_iterator it(fullPath); it != fs::directory_iterator(); ++it)
-					{
-						if (fs::is_regular_file(*it))
-						{
-							string fileName = it->path().filename().string();
-							if (fileName.find_last_of(".") != std::string::npos) {
-								int dotIndex = fileName.find_last_of(".");
-								mExt = fileName.substr(dotIndex + 1);
-								if (mExt == "png" || mExt == "jpg") {
-									anyImagefileName = fileName;
-								}
-								// get the prefix for the image sequence
-								// the files are named from p0000.jpg to p2253.jpg for instance
-								// sometimes only 3 digits : l000 this time
-								// find the first digit
-								int firstDigit = fileName.find_first_of("0123456789");
-								// if valid image sequence (contains a digit)
-								if (firstDigit > -1) {
-									mNumberOfDigits = dotIndex - firstDigit;
-									int prefixIndex = fileName.find_last_of(".") - mNumberOfDigits;//-4 or -3
-									mPrefix = fileName.substr(0, prefixIndex);
-									if (!firstIndexFound) {
-										firstIndexFound = true;
-										mNextIndexFrameToTry = std::stoi(fileName.substr(prefixIndex, dotIndex));
-									}
-								}
-							}
-							// only if proper image sequence
-							if (firstIndexFound) {
-								if (mExt == "png" || mExt == "jpg") {
-									if (noValidFile) {
-										// we found a valid file
-										noValidFile = false;
-										mSequenceTextures.clear();
-										// reset playhead to the start
-										//mPlayheadPosition = 0;
-										mLoadingFilesComplete = false;
-										loadNextImageFromDisk();
-										mPlaying = true;
-									}
-								}
-							}
-
-						}
-					}
-					CI_LOG_V("successfully loaded " + mPath);
-				}
-				catch (Exception &exc) {
-					CI_LOG_EXCEPTION("error loading ", exc);
-				}
-
-				// init: if no valid file found we take the default 0.jpg
-				if (noValidFile) {
-					if (anyImagefileName.length() > 0) {
-						mTexture = ci::gl::Texture::create(loadImage(loadAsset(anyImagefileName)), ci::gl::Texture::Format().loadTopDown(mTopDown));
-						mSequenceTextures.push_back(ci::gl::Texture::create(loadImage(loadAsset(anyImagefileName)), gl::Texture::Format().loadTopDown(mTopDown)));
-						mLoadingFilesComplete = true;
-						mFramesLoaded = 1;
-					}
-				}
-			}
+			loadFromFullPath(fullPath.string());
 		}
 	}
 	XmlTree	TextureImageSequence::toXml() const {
@@ -510,18 +519,18 @@ namespace VideoDromm {
 	** ---- TextureMovie ------------------------------------------------
 	*/
 	TextureMovie::TextureMovie() {
+		mType = MOVIE;
 
 	}
 	void TextureMovie::fromXml(const XmlTree &xml)
 	{
-		mType = MOVIE;
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
 		mPath = xml.getAttributeValue<string>("path", "");
 		if (mPath.length() > 0) {
 			fs::path fullPath = getAssetPath("") / mPath;// TODO / mVDSettings->mAssetsPath
 			if (fs::exists(fullPath)) {
-				loadMovieFile(fullPath);
+				loadFromFullPath(fullPath.string());
 			}
 			else {
 				mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
@@ -536,18 +545,17 @@ namespace VideoDromm {
 		xml.setAttribute("topdown", mTopDown);
 		return xml;
 	}
-	void TextureMovie::loadMovieFile(const fs::path &moviePath)
+	void TextureMovie::loadFromFullPath(string aPath)
 	{
 		try {
 			mMovie.reset();
 			// load up the movie, set it to loop, and begin playing
 #if defined( CINDER_MSW )
-			mMovie = qtime::MovieGlHap::create(moviePath);
+			mMovie = qtime::MovieGlHap::create(aPath);
 #endif
 #if defined( CINDER_MAC )
-			mMovie = qtime::MovieGl::create( moviePath );
+			mMovie = qtime::MovieGl::create( aPath );
 #endif
-			mMovie = qtime::MovieGlHap::create(moviePath);
 			mLoopVideo = (mMovie->getDuration() < 30.0f);
 			mMovie->setLoop(mLoopVideo);
 			mMovie->play();
@@ -574,6 +582,7 @@ namespace VideoDromm {
 	*/
 #if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
 	TextureCamera::TextureCamera() {
+		mType = CAMERA;
 		mFirstCameraDeviceName = "";
 		printDevices();
 
@@ -589,7 +598,6 @@ namespace VideoDromm {
 	{
 		// retrieve attributes specific to this type of texture
 		mPath = xml.getAttributeValue<string>("path", "");
-		mType = CAMERA;
 
 	}
 	XmlTree	TextureCamera::toXml() const {
@@ -633,6 +641,7 @@ namespace VideoDromm {
 	** ---- TextureShared ------------------------------------------------
 	*/
 	TextureShared::TextureShared() {
+		mType = SHARED;
 #if defined( CINDER_MSW )
 		initialized = false;
 		g_Width = 320; // set global width and height to something
@@ -647,7 +656,6 @@ namespace VideoDromm {
 	}
 	void TextureShared::fromXml(const XmlTree &xml)
 	{
-		mType = SHARED;
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
 		mPath = xml.getAttributeValue<string>("path", "");
@@ -740,6 +748,7 @@ namespace VideoDromm {
 	** ---- TextureAudio ------------------------------------------------
 	*/
 	TextureAudio::TextureAudio() {
+		mType = AUDIO;
 		initialized = false;
 		for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
 		mTexture = gl::Texture::create(dTexture, 0x1909, 512, 2); //#define GL_LUMINANCE 0x1909
@@ -769,19 +778,18 @@ namespace VideoDromm {
 	void TextureAudio::fromXml(const XmlTree &xml)
 	{
 		VDTexture::fromXml(xml);
-		mType = AUDIO;
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
 		mUseLineIn = xml.getAttributeValue<bool>("uselinein", "true");
 		mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
 	}
-	void TextureAudio::loadWaveFile(string aFilePath)
+	void TextureAudio::loadFromFullPath(string aPath)
 	{
 		try {
-			if (fs::exists(aFilePath)) {
+			if (fs::exists(aPath)) {
 
 				auto ctx = audio::master();
-				mSourceFile = audio::load(loadFile(aFilePath), audio::master()->getSampleRate());
+				mSourceFile = audio::load(loadFile(aPath), audio::master()->getSampleRate());
 				mSamplePlayerNode = ctx->makeNode(new audio::FilePlayerNode(mSourceFile, false));
 				mSamplePlayerNode->setLoopEnabled(false);
 				mSamplePlayerNode >> mMonitorWaveSpectralNode >> ctx->getOutput();
