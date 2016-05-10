@@ -36,7 +36,7 @@ namespace VideoDromm {
 	{
 		XmlTree			doc;
 		VDTextureList	vdtexturelist;
-
+        bool            isValid = true;
 		// try to load the specified xml file
 		try { doc = XmlTree(source); }
 		catch (...) { return vdtexturelist; }
@@ -68,9 +68,15 @@ namespace VideoDromm {
 					vdtexturelist.push_back(t);
 				}
 				else if (texturetype == "movie") {
-					TextureMovieRef t(new TextureMovie());
+#if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
+                    TextureMovieRef t(new TextureMovie());
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
+#else
+                    // movie not supported on this platform
+                    CI_LOG_V("movie not supported on this platform");
+                    isValid = false;
+#endif
 				}
 				else if (texturetype == "camera") {
 #if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
@@ -80,19 +86,19 @@ namespace VideoDromm {
 #else
 					// camera not supported on this platform
 					CI_LOG_V("camera not supported on this platform");
-					XmlTree		xml;
-					xml.setTag("details");
-					xml.setAttribute("path", "0.jpg");
-					xml.setAttribute("width", 640);
-					xml.setAttribute("height", 480);
-					t->fromXml(xml);
-					vdtexturelist.push_back(t);
+                    isValid = false;
 #endif
 				}
 				else if (texturetype == "shared") {
-					TextureSharedRef t(new TextureShared());
+#if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
+                    TextureSharedRef t(new TextureShared());
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
+#else
+                    // shared textures not supported on this platform
+                    CI_LOG_V("shared textures not supported on this platform");
+                    isValid = false;
+#endif
 				}
 				else if (texturetype == "audio") {
 					TextureAudioRef t(new TextureAudio());
@@ -102,16 +108,21 @@ namespace VideoDromm {
 				else {
 					// unknown texture type
 					CI_LOG_V("unknown texture type");
-					TextureImageRef t(new TextureImage());
-					XmlTree		xml;
-					xml.setTag("details");
-					xml.setAttribute("path", "0.jpg");
-					xml.setAttribute("width", 640);
-					xml.setAttribute("height", 480);
-					t->fromXml(xml);
-					vdtexturelist.push_back(t);
+					
+
 				}
 			}
+            if (!isValid)
+            {
+                TextureImageRef t(new TextureImage());
+                XmlTree		xml;
+                xml.setTag("details");
+                xml.setAttribute("path", "0.jpg");
+                xml.setAttribute("width", 640);
+                xml.setAttribute("height", 480);
+                t->fromXml(xml);
+                vdtexturelist.push_back(t);
+            }
 		}
 		else {
 			// malformed XML
@@ -125,6 +136,7 @@ namespace VideoDromm {
 			t->fromXml(xml);
 			vdtexturelist.push_back(t);
 		}
+        
 		return vdtexturelist;
 	}
 
@@ -283,7 +295,6 @@ namespace VideoDromm {
 		if (fs::exists(fullPath)) {
 			try {
 				bool firstIndexFound = false;
-				int i = 0;
 				// loading 2000 files takes a while, I load only the first one
 				for (fs::directory_iterator it(fullPath); it != fs::directory_iterator(); ++it)
 				{

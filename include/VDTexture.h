@@ -186,7 +186,8 @@ namespace VideoDromm
 
 	/*
 	** ---- TextureMovie ------------------------------------------------
-	*/	
+	*/
+#if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
 	typedef std::shared_ptr<class TextureMovie>	TextureMovieRef;
 
 	class TextureMovie
@@ -220,6 +221,7 @@ namespace VideoDromm
 		bool						mLoopVideo;
 		ci::gl::Texture2dRef		mTexture;
 	};
+#endif
 	/*
 	** ---- TextureCamera ------------------------------------------------
 	*/
@@ -254,6 +256,7 @@ namespace VideoDromm
 	/*
 	** ---- TextureShared ------------------------------------------------
 	*/
+#if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
 	typedef std::shared_ptr<class TextureShared>	TextureSharedRef;
 
 	class TextureShared
@@ -290,7 +293,8 @@ namespace VideoDromm
 #endif
 		ci::gl::Texture2dRef		mTexture;
 	};
-	/* 
+#endif
+	/*
 	** ---- TextureAudio ------------------------------------------------ 
 	*/
 	typedef std::shared_ptr<class TextureAudio>	TextureAudioRef;
