@@ -6,7 +6,7 @@
 	author="Bruce Lane"
 	license="GNU AFFERO GENERAL PUBLIC LICENSE"
     version="1.0"
-	summary="Videodromm block for Cinder 0.9"
+	summary="Videodromm block for Cinder 0.9 (needs org.libcinder.hap2 in certain cases)"
 	url="https://github.com/Videodromm/Cinder-Videodromm-Textures"
 	git="git://github.com/Videodromm/Cinder-Videodromm-Textures.git"
 	>
@@ -19,7 +19,6 @@
 	<sourcePattern>src/*.cpp</sourcePattern>
 	<sourcePattern>src/*.c</sourcePattern>
 	<platform os="msw">
-		<requires>org.libcinder.hap2</requires>
 		<requires>fr.batchass.spout</requires>
 	</platform>
 	<platform os="macosx">
