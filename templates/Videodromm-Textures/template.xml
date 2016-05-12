@@ -2,12 +2,6 @@
 <cinder>
 <template name="Videodromm: Textures" parent="org.libcinder.apptemplates.basicopengl">
 	<requires>com.videodromm.Videodromm-Textures</requires>
-	<platform os="msw">
-		<requires>org.libcinder.hap2</requires>
-	</platform>
-	<platform os="macosx">
-		<requires>info.v002.syphon</requires>
-	</platform>
 	<source replaceContents="true" replaceName="true">src/_TBOX_PREFIX_App.cpp</source>
 	<asset>assets/0.jpg</asset>
 	<asset>assets/passthru.vert</asset>
