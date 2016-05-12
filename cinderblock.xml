@@ -20,8 +20,10 @@
 	<sourcePattern>src/*.c</sourcePattern>
 	<platform os="msw">
 		<requires>org.libcinder.hap2</requires>
+		<requires>fr.batchass.spout</requires>
 	</platform>
 	<platform os="macosx">
+		<requires>org.libcinder.quicktime</requires>
 		<requires>info.v002.syphon</requires>
 	</platform>
 </block>
