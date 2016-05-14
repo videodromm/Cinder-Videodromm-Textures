@@ -214,7 +214,9 @@ namespace VideoDromm {
 	std::string VDTexture::getName(){
 		return mName;
 	}
-
+	float VDTexture::getIntensity() {
+		return 0.0f;
+	}
 	ci::gl::TextureRef VDTexture::getTexture() {
 		return mTexture;
 	}
@@ -822,7 +824,9 @@ namespace VideoDromm {
 			CI_LOG_W("could not open wavefile");
 		}
 	}
-
+	float TextureAudio::getIntensity() {
+		return mIntensity; 
+	}
 
 	ci::gl::Texture2dRef TextureAudio::getTexture() {
 
@@ -858,7 +862,7 @@ namespace VideoDromm {
 		if (!mMagSpectrum.empty()) {
 
 			unsigned char signal[kBands];
-			maxVolume = 0.0;
+			mIntensity = 0.0;
 			size_t mDataSize = mMagSpectrum.size();
 			if (mDataSize > 0 && mDataSize < 2048)
 			{
@@ -869,9 +873,9 @@ namespace VideoDromm {
 					float f = mMagSpectrum[i];
 					db = audio::linearToDecibel(f);
 					f = db * audioMultFactor;
-					if (f > maxVolume)
+					if (f > mIntensity)
 					{
-						maxVolume = f; mv = f;
+						mIntensity = f; mv = f;
 					}
 					mData[i] = f;
 					int ger = f;

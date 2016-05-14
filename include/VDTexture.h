@@ -83,6 +83,7 @@ namespace VideoDromm
 		static void						writeSettings(const VDTextureList &vdtexturelist, const ci::DataTargetRef &target);
 		virtual void					loadFromFullPath(string aPath);
 		string							getStatus() { return mStatus; };
+		virtual float					getIntensity();
 	protected:
 		std::string						mName;
 		bool							mFlipV;
@@ -93,7 +94,7 @@ namespace VideoDromm
 		unsigned int 					mWidth;
 		unsigned int					mHeight;
 		std::string						mStatus;
-
+		float							mIntensity;
 		//! Texture
 		ci::gl::Texture2dRef			mTexture;
 	};
@@ -322,6 +323,7 @@ namespace VideoDromm
 	protected:
 		//! 
 		virtual ci::gl::Texture2dRef	getTexture() override;
+		float							getIntensity() override;
 	private:
 		// init
 		bool							initialized;
@@ -343,7 +345,7 @@ namespace VideoDromm
 		unsigned char					dTexture[1024];
 		ci::gl::Texture2dRef			mTexture;
 		bool							mUseLineIn;
-		float							maxVolume;
+		float							mIntensity;
 		float							audioMultFactor;
 		float							*mData;
 		float							iFreqs[4];
