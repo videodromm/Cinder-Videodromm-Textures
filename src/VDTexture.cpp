@@ -108,8 +108,6 @@ namespace VideoDromm {
 				else {
 					// unknown texture type
 					CI_LOG_V("unknown texture type");
-					
-
 				}
 			}
             if (!isValid)
