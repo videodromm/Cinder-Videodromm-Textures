@@ -761,6 +761,7 @@ namespace VideoDromm {
 	TextureAudio::TextureAudio() {
 		mType = AUDIO;
 		initialized = false;
+		mName = "audio";
 		for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
 		mTexture = gl::Texture::create(dTexture, 0x1909, 512, 2); //#define GL_LUMINANCE 0x1909
 
@@ -792,7 +793,8 @@ namespace VideoDromm {
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
 		mUseLineIn = xml.getAttributeValue<bool>("uselinein", "true");
-		mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
+		for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
+		mTexture = gl::Texture::create(dTexture, 0x1909, 512, 2); //#define GL_LUMINANCE 0x1909
 	}
 	void TextureAudio::loadFromFullPath(string aPath)
 	{
