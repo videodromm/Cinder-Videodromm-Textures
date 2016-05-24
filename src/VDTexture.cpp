@@ -16,6 +16,8 @@ namespace VideoDromm {
 		, mWidth(640)
 		, mHeight(480)
 	{
+		// Settings
+		mVDSettings = VDSettings::create();
 
 		if (mName.length() == 0) {
 			mName = mPath;
@@ -212,9 +214,9 @@ namespace VideoDromm {
 	std::string VDTexture::getName(){
 		return mName;
 	}
-	float VDTexture::getIntensity() {
+	/*float VDTexture::getIntensity() {
 		return 0.0f;
-	}
+	}*/
 	ci::gl::TextureRef VDTexture::getTexture() {
 		return mTexture;
 	}
@@ -765,8 +767,8 @@ namespace VideoDromm {
 		for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
 		mTexture = gl::Texture::create(dTexture, 0x1909, 512, 2); //#define GL_LUMINANCE 0x1909
 
-		audioMultFactor = 1.0f;
-		mData = new float[1024];
+		mVDSettings->controlValues[13] = 1.0f; //audioMultFactor
+		/*mData = new float[1024];
 		for (int i = 0; i < 1024; i++)
 		{
 			mData[i] = 0;
@@ -774,7 +776,7 @@ namespace VideoDromm {
 		for (int i = 0; i < 4; i++)
 		{
 			iFreqs[i] = i;
-		}
+		}*/
 	}
 	XmlTree	TextureAudio::toXml() const {
 		XmlTree xml = VDTexture::toXml();
@@ -782,7 +784,7 @@ namespace VideoDromm {
 		// add attributes specific to this type of texture
 		xml.setAttribute("path", mPath);
 		xml.setAttribute("topdown", mTopDown);
-		xml.setAttribute("uselinein", mUseLineIn);
+		xml.setAttribute("uselinein", mVDSettings->mUseLineIn);
 
 		return xml;
 	}
@@ -792,7 +794,7 @@ namespace VideoDromm {
 		VDTexture::fromXml(xml);
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
-		mUseLineIn = xml.getAttributeValue<bool>("uselinein", "true");
+		mVDSettings->mUseLineIn = xml.getAttributeValue<bool>("uselinein", "true");
 		for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
 		mTexture = gl::Texture::create(dTexture, 0x1909, 512, 2); //#define GL_LUMINANCE 0x1909
 	}
@@ -817,23 +819,23 @@ namespace VideoDromm {
 				filePlayer->setSourceFile(mSourceFile);
 
 				mSamplePlayerNode->start();
-				mUseLineIn = false;
+				mVDSettings->mUseLineIn = false;
 			}
 		}
 		catch (...) {
 			CI_LOG_W("could not open wavefile");
 		}
 	}
-	float TextureAudio::getIntensity() {
+	/*float TextureAudio::getIntensity() {
 		return mIntensity; 
-	}
+	}*/
 
 	ci::gl::Texture2dRef TextureAudio::getTexture() {
 
 		if (!initialized) {
 			CI_LOG_V("TextureAudio::getTexture() init");
 			auto ctx = audio::Context::master();
-			if (mUseLineIn) {
+			if (mVDSettings->mUseLineIn) {
 				// linein
 				CI_LOG_W("trying to open mic/line in, if no line follows in the log, the app crashed so put UseLineIn to false in the textures.xml file");
 				mLineIn = ctx->createInputDeviceNode(); //crashes if linein is present but disabled, doesn't go to catch block
@@ -852,7 +854,7 @@ namespace VideoDromm {
 			initialized = true;
 		}
 
-		if (mUseLineIn) {
+		if (mVDSettings->mUseLineIn) {
 			mMagSpectrum = mMonitorLineInSpectralNode->getMagSpectrum();
 		}
 		else {
@@ -862,53 +864,42 @@ namespace VideoDromm {
 		if (!mMagSpectrum.empty()) {
 
 			unsigned char signal[kBands];
-			mIntensity = 0.0;
+			mVDSettings->maxVolume = 0.0;//mIntensity
 			size_t mDataSize = mMagSpectrum.size();
-			if (mDataSize > 0 && mDataSize < 2048)
-			{
-				float mv;
+			if (mDataSize > 0 && mDataSize < 2048) {
 				float db;
-				float maxdb = 0.0f;
 				for (size_t i = 0; i < mDataSize; i++) {
 					float f = mMagSpectrum[i];
 					db = audio::linearToDecibel(f);
-					f = db * audioMultFactor;
-					if (f > mIntensity)
+					f = db *mVDSettings->controlValues[13];// audioMultFactor;
+					if (f > mVDSettings->maxVolume)
 					{
-						mIntensity = f; mv = f;
+						mVDSettings->maxVolume = f;
 					}
-					mData[i] = f;
+					//mData[i] = f;
 					int ger = f;
 					signal[i] = static_cast<unsigned char>(ger);
-
-					if (db > maxdb) maxdb = db;
-
-					switch (i)
-					{
+					switch (i) {
 					case 11:
-						iFreqs[0] = f;
-						arr[0] = f;
+						mVDSettings->iFreqs[0] = f;
 						break;
 					case 13:
-						iFreqs[1] = f;
-						arr[1] = f;
+						mVDSettings->iFreqs[1] = f;
 						break;
 					case 15:
-						iFreqs[2] = f;
-						arr[2] = f;
+						mVDSettings->iFreqs[2] = f;
 						break;
 					case 18:
-						iFreqs[3] = f;
-						arr[3] = f;
+						mVDSettings->iFreqs[3] = f;
 						break;
 					case 25:
-						arr[4] = f;
+						mVDSettings->iFreqs[4] = f;
 						break;
 					case 30:
-						arr[5] = f;
+						mVDSettings->iFreqs[5] = f;
 						break;
 					case 35:
-						arr[6] = f;
+						mVDSettings->iFreqs[6] = f;
 						break;
 					default:
 						break;

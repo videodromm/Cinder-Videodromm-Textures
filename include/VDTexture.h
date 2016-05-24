@@ -23,6 +23,9 @@
 #include "cinderSyphon.h"
 #endif
 
+// Settings
+#include "VDSettings.h"
+
 // audio
 #include "cinder/audio/Context.h"
 #include "cinder/audio/MonitorNode.h"
@@ -83,8 +86,11 @@ namespace VideoDromm
 		static void						writeSettings(const VDTextureList &vdtexturelist, const ci::DataTargetRef &target);
 		virtual void					loadFromFullPath(string aPath);
 		string							getStatus() { return mStatus; };
-		virtual float					getIntensity();
+		//virtual float					getIntensity();
 	protected:
+		// Settings
+		VDSettingsRef					mVDSettings;
+
 		std::string						mName;
 		bool							mFlipV;
 		bool							mFlipH;
@@ -94,7 +100,7 @@ namespace VideoDromm
 		unsigned int 					mWidth;
 		unsigned int					mHeight;
 		std::string						mStatus;
-		float							mIntensity;
+		//float							mIntensity;
 		//! Texture
 		ci::gl::Texture2dRef			mTexture;
 	};
@@ -312,7 +318,7 @@ namespace VideoDromm
 		//!
 		virtual void			loadFromFullPath(string aPath) override;
 
-		float*					getSmallSpectrum() { return arr; };
+		//float*					getSmallSpectrum() { return arr; };
 
 	public:
 		TextureAudio();
@@ -323,7 +329,7 @@ namespace VideoDromm
 	protected:
 		//! 
 		virtual ci::gl::Texture2dRef	getTexture() override;
-		float							getIntensity() override;
+		//float							getIntensity() override;
 	private:
 		// init
 		bool							initialized;
@@ -337,17 +343,17 @@ namespace VideoDromm
 
 		vector<float>					mMagSpectrum;
 
-		float							arr[7];
+		//float							arr[7];
 		// number of frequency bands of our spectrum
 		static const int				kBands = 1024;
 
 		// textures
 		unsigned char					dTexture[1024];
 		ci::gl::Texture2dRef			mTexture;
-		bool							mUseLineIn;
-		float							mIntensity;
-		float							audioMultFactor;
-		float							*mData;
-		float							iFreqs[4];
+		//bool							mUseLineIn;
+		//float							mIntensity;
+		//float							audioMultFactor;
+		//float							*mData;
+		//float							iFreqs[4];
 	};
 }
