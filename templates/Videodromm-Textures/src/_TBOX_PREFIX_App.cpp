@@ -2,6 +2,13 @@
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
 
+// Settings
+#include "VDSettings.h"
+// Session
+#include "VDSession.h"
+// Animation
+#include "VDAnimation.h"
+
 #include "VDTexture.h"
 
 using namespace ci;
@@ -19,6 +26,15 @@ public:
 	void						fileDrop(FileDropEvent event) override;
 	void						cleanup() override;
 private:
+	// Settings
+	VDSettingsRef				mVDSettings;
+	// Session
+	VDSessionRef				mVDSession;
+	// Log
+	VDLogRef					mVDLog;
+	// Animation
+	VDAnimationRef				mVDAnimation;
+
 	VDTextureList				mTexs;
 	fs::path					mTexturesFilepath;
 	int							i, x;
@@ -27,16 +43,21 @@ private:
 
 void _TBOX_PREFIX_App::setup()
 {
+	// Settings
+	mVDSettings = VDSettings::create();
+	// Session
+	mVDSession = VDSession::create(mVDSettings);
+	// Animation
+	mVDAnimation = VDAnimation::create(mVDSettings, mVDSession);
 	// initialize 
 	mTexturesFilepath = getAssetPath("") / "defaulttextures.xml";
 	if (fs::exists(mTexturesFilepath)) {
 		// load textures from file if one exists
-		mTexs = VDTexture::readSettings(loadFile(mTexturesFilepath));
+		mTexs = VDTexture::readSettings(mVDAnimation, loadFile(mTexturesFilepath));
 	}
 	else {
 		// otherwise create a texture from scratch
-		mTexs.push_back(TextureImage::create());
-
+		mTexs.push_back(TextureAudio::create(mVDAnimation));
 	}
 }
 void _TBOX_PREFIX_App::fileDrop(FileDropEvent event)
@@ -100,7 +121,6 @@ void _TBOX_PREFIX_App::update()
 }
 void _TBOX_PREFIX_App::cleanup()
 {
-
 	// save textures
 	VDTexture::writeSettings(mTexs, writeFile(mTexturesFilepath));
 

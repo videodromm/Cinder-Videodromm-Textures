@@ -24,7 +24,7 @@
 #endif
 
 // Settings
-#include "VDSettings.h"
+#include "VDAnimation.h"
 
 // audio
 #include "cinder/audio/Context.h"
@@ -81,15 +81,12 @@ namespace VideoDromm
 		//!
 		virtual XmlTree					toXml() const;
 		//! read a xml file and pass back a vector of VDTextures
-		static VDTextureList			readSettings(const ci::DataSourceRef &source);
+		static VDTextureList			readSettings(VDAnimationRef aVDAnimation, const ci::DataSourceRef &source);
 		//! write a xml file
 		static void						writeSettings(const VDTextureList &vdtexturelist, const ci::DataTargetRef &target);
 		virtual void					loadFromFullPath(string aPath);
 		string							getStatus() { return mStatus; };
-		//virtual float					getIntensity();
 	protected:
-		// Settings
-		VDSettingsRef					mVDSettings;
 
 		std::string						mName;
 		bool							mFlipV;
@@ -103,6 +100,8 @@ namespace VideoDromm
 		//float							mIntensity;
 		//! Texture
 		ci::gl::Texture2dRef			mTexture;
+	private:
+
 	};
 	/*
 	** ---- TextureImage ------------------------------------------------
@@ -310,7 +309,7 @@ namespace VideoDromm
 		: public VDTexture {
 	public:
 		//
-		static TextureAudioRef	create() { return std::make_shared<TextureAudio>(); }
+		static TextureAudioRef	create(VDAnimationRef aVDAnimation) { return std::make_shared<TextureAudio>(aVDAnimation); }
 		//!
 		void					fromXml(const XmlTree &xml) override;
 		//!
@@ -318,10 +317,8 @@ namespace VideoDromm
 		//!
 		virtual void			loadFromFullPath(string aPath) override;
 
-		//float*					getSmallSpectrum() { return arr; };
-
 	public:
-		TextureAudio();
+		TextureAudio(VDAnimationRef aVDAnimation);
 		virtual ~TextureAudio(void);
 
 		//! returns a shared pointer 
@@ -331,6 +328,8 @@ namespace VideoDromm
 		virtual ci::gl::Texture2dRef	getTexture() override;
 		//float							getIntensity() override;
 	private:
+		// Animation
+		VDAnimationRef					mVDAnimation;
 		// init
 		bool							initialized;
 		// audio
@@ -343,17 +342,12 @@ namespace VideoDromm
 
 		vector<float>					mMagSpectrum;
 
-		//float							arr[7];
 		// number of frequency bands of our spectrum
 		static const int				kBands = 1024;
 
 		// textures
 		unsigned char					dTexture[1024];
 		ci::gl::Texture2dRef			mTexture;
-		//bool							mUseLineIn;
-		//float							mIntensity;
-		//float							audioMultFactor;
-		//float							*mData;
-		//float							iFreqs[4];
+
 	};
 }
