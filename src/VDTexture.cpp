@@ -211,9 +211,7 @@ namespace VideoDromm {
 	std::string VDTexture::getName(){
 		return mName;
 	}
-	/*float VDTexture::getIntensity() {
-		return 0.0f;
-	}*/
+	
 	ci::gl::TextureRef VDTexture::getTexture() {
 		return mTexture;
 	}
@@ -363,6 +361,8 @@ namespace VideoDromm {
 	}
 	void TextureImageSequence::fromXml(const XmlTree &xml)
 	{
+		// init		
+		mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
 		// retrieve attributes specific to this type of texture
 		mPath = xml.getAttributeValue<string>("path", "");
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
@@ -534,6 +534,8 @@ namespace VideoDromm {
 	}
 	void TextureMovie::fromXml(const XmlTree &xml)
 	{
+		// init		
+		mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
 		mPath = xml.getAttributeValue<string>("path", "");
@@ -541,9 +543,6 @@ namespace VideoDromm {
 			fs::path fullPath = getAssetPath("") / mPath;// TODO / mVDSettings->mAssetsPath
 			if (fs::exists(fullPath)) {
 				loadFromFullPath(fullPath.string());
-			}
-			else {
-				mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
 			}
 		}
 	}
@@ -606,6 +605,8 @@ namespace VideoDromm {
 	}
 	void TextureCamera::fromXml(const XmlTree &xml)
 	{
+		// init		
+		mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
 		// retrieve attributes specific to this type of texture
 		mPath = xml.getAttributeValue<string>("path", "");
 
@@ -666,6 +667,8 @@ namespace VideoDromm {
 	}
 	void TextureShared::fromXml(const XmlTree &xml)
 	{
+		// init		
+		mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
 		mPath = xml.getAttributeValue<string>("path", "");
