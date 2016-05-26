@@ -87,16 +87,16 @@ namespace VideoDromm
 		virtual void					loadFromFullPath(string aPath);
 		string							getStatus() { return mStatus; };
 		//! area to display
-		void							setXLeft(int aXleft) { mXLeft = aXleft; };
-		void							setYTop(int aYTop) { mYTop = aYTop; };
-		void							setXRight(int aXRight) { mXLeft = aXRight; };
-		void							setYBottom(int aYBottom) { mYBottom = aYBottom; };
+		void							lockBounds(bool lock, unsigned int aWidth, unsigned int aHeight);
+		void							setXLeft(int aXleft);
+		void							setYTop(int aYTop);
+		void							setXRight(int aXRight);
+		void							setYBottom(int aYBottom);
 		int								getXLeft() { return mXLeft; };
 		int								getYTop() { return mYTop; };
 		int								getXRight() { return mXRight; };
 		int								getYBottom() { return mYBottom; };
 	protected:
-
 		std::string						mName;
 		bool							mFlipV;
 		bool							mFlipH;
@@ -105,6 +105,8 @@ namespace VideoDromm
 		bool							mTopDown;
 		unsigned int 					mWidth;
 		unsigned int					mHeight;
+		unsigned int 					mAreaWidth;
+		unsigned int					mAreaHeight;
 		std::string						mStatus;
 		//! Texture
 		ci::gl::Texture2dRef			mTexture;
@@ -112,6 +114,7 @@ namespace VideoDromm
 		Surface							mInputSurface;
 		Surface							mProcessedSurface;
 		int								mXLeft, mYTop, mXRight, mYBottom;
+		bool							mBoundsLocked;
 	private:
 
 	};

@@ -16,10 +16,13 @@ namespace VideoDromm {
 		, mWidth(640)
 		, mHeight(480)
 	{
+		mBoundsLocked = true;
 		mXLeft = 0;
 		mYTop = 0;
 		mXRight = mWidth;
 		mYBottom = mHeight;
+		mAreaWidth = mWidth;
+		mAreaHeight = mHeight;
 		if (mName.length() == 0) {
 			mName = mPath;
 		}
@@ -193,6 +196,36 @@ namespace VideoDromm {
 		// initialize texture
 		mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
 	}
+	void VDTexture::lockBounds(bool lock, unsigned int aWidth, unsigned int aHeight) {
+		mBoundsLocked = lock;
+		mAreaWidth = aWidth;
+		mAreaHeight = aHeight;
+	}
+	void VDTexture::setXLeft(int aXleft) { 
+		mXLeft = aXleft; 
+		if (mBoundsLocked) {
+			mXRight = mXLeft+ mAreaWidth;
+		}
+	};
+	void VDTexture::setYTop(int aYTop) { 
+		mYTop = aYTop; 
+		if (mBoundsLocked) {
+			mYBottom = mYTop + mAreaHeight;
+		}
+	};
+	void VDTexture::setXRight(int aXRight) {
+		mXRight = aXRight; 
+		if (mBoundsLocked) {
+			mXLeft = mXRight - mAreaWidth;
+		}
+	};
+	void VDTexture::setYBottom(int aYBottom) { 
+		mYBottom = aYBottom; 
+		if (mBoundsLocked) {
+			mYTop = mYBottom - mAreaHeight;
+		}	
+	};
+
 	int VDTexture::getTextureWidth() {
 		return mWidth;
 	};
