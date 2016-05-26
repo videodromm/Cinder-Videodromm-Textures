@@ -21,6 +21,7 @@ class _TBOX_PREFIX_App : public App {
 public:
 	void						setup() override;
 	void						mouseDown( MouseEvent event ) override;
+	void						mouseDrag(MouseEvent event) override;
 	void						update() override;
 	void						draw() override;
 	void						fileDrop(FileDropEvent event) override;
@@ -137,7 +138,19 @@ void _TBOX_PREFIX_App::cleanup()
 }
 void _TBOX_PREFIX_App::mouseDown(MouseEvent event)
 {
-    
+	for (auto tex : mTexs)
+	{
+		tex->setXLeft(event.getX());
+		tex->setYTop(event.getY());
+	}
+}
+void _TBOX_PREFIX_App::mouseDrag(MouseEvent event)
+{
+	for (auto tex : mTexs)
+	{
+		tex->setXRight(event.getX());
+		tex->setYBottom(event.getY());
+	}
 }
 
 void _TBOX_PREFIX_App::draw()

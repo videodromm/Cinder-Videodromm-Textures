@@ -22,20 +22,21 @@ namespace VideoDromm {
 		// init the texture whatever happens next
 		if (mPath.length() > 0) {
 			mTexture = ci::gl::Texture::create(ci::loadImage(mPath), ci::gl::Texture::Format().loadTopDown(mTopDown));
+			mInputSurface = Surface(loadImage(mPath));
 		}
 		else {
 			mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
+			mInputSurface = Surface(mWidth, mHeight, true);
 		}
 	}
 	VDTexture::~VDTexture(void) {
 
 	}
-
-	VDTextureList VDTexture::readSettings(VDAnimationRef aVDAnimation, const DataSourceRef &source )
+	VDTextureList VDTexture::readSettings(VDAnimationRef aVDAnimation, const DataSourceRef &source)
 	{
 		XmlTree			doc;
 		VDTextureList	vdtexturelist;
-        bool            isValid = true;
+		bool            isValid = true;
 		// try to load the specified xml file
 		try { doc = XmlTree(source); }
 		catch (...) { return vdtexturelist; }
@@ -68,13 +69,13 @@ namespace VideoDromm {
 				}
 				else if (texturetype == "movie") {
 #if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
-                    TextureMovieRef t(new TextureMovie());
+					TextureMovieRef t(new TextureMovie());
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 #else
-                    // movie not supported on this platform
-                    CI_LOG_V("movie not supported on this platform");
-                    isValid = false;
+					// movie not supported on this platform
+					CI_LOG_V("movie not supported on this platform");
+					isValid = false;
 #endif
 				}
 				else if (texturetype == "camera") {
@@ -85,18 +86,18 @@ namespace VideoDromm {
 #else
 					// camera not supported on this platform
 					CI_LOG_V("camera not supported on this platform");
-                    isValid = false;
+					isValid = false;
 #endif
 				}
 				else if (texturetype == "shared") {
 #if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
-                    TextureSharedRef t(new TextureShared());
+					TextureSharedRef t(new TextureShared());
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 #else
-                    // shared textures not supported on this platform
-                    CI_LOG_V("shared textures not supported on this platform");
-                    isValid = false;
+					// shared textures not supported on this platform
+					CI_LOG_V("shared textures not supported on this platform");
+					isValid = false;
 #endif
 				}
 				else if (texturetype == "audio") {
@@ -109,17 +110,17 @@ namespace VideoDromm {
 					CI_LOG_V("unknown texture type");
 				}
 			}
-            if (!isValid)
-            {
-                TextureImageRef t(new TextureImage());
-                XmlTree		xml;
-                xml.setTag("details");
-                xml.setAttribute("path", "0.jpg");
-                xml.setAttribute("width", 640);
-                xml.setAttribute("height", 480);
-                t->fromXml(xml);
-                vdtexturelist.push_back(t);
-            }
+			if (!isValid)
+			{
+				TextureImageRef t(new TextureImage());
+				XmlTree		xml;
+				xml.setTag("details");
+				xml.setAttribute("path", "0.jpg");
+				xml.setAttribute("width", 640);
+				xml.setAttribute("height", 480);
+				t->fromXml(xml);
+				vdtexturelist.push_back(t);
+			}
 		}
 		else {
 			// malformed XML
@@ -133,7 +134,7 @@ namespace VideoDromm {
 			t->fromXml(xml);
 			vdtexturelist.push_back(t);
 		}
-        
+
 		return vdtexturelist;
 	}
 
@@ -211,7 +212,7 @@ namespace VideoDromm {
 	std::string VDTexture::getName(){
 		return mName;
 	}
-	
+
 	ci::gl::TextureRef VDTexture::getTexture() {
 		return mTexture;
 	}
@@ -244,10 +245,17 @@ namespace VideoDromm {
 			if (fs::exists(fullPath)) {
 				// TODO mTopDown has no effect!?!
 				mTexture = ci::gl::Texture::create(loadImage(loadAsset(mPath)), ci::gl::Texture::Format().loadTopDown(mTopDown));
+				mInputSurface = Surface(loadImage(loadAsset(mPath)));
+
 			}
 			else {
 				mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
+				mInputSurface = Surface(mWidth, mHeight, true);
 			}
+			mXLeft = 0;
+			mYTop = 0;
+			mXRight = mTexture->getWidth();
+			mYBottom = mTexture->getHeight();
 		}
 	}
 	void TextureImage::loadFromFullPath(string aPath) {
@@ -255,6 +263,9 @@ namespace VideoDromm {
 	}
 
 	ci::gl::Texture2dRef TextureImage::getTexture() {
+		Area area(mXLeft, mYTop, mXRight, mYBottom);
+		mProcessedSurface = mInputSurface.clone(area);
+		mTexture = gl::Texture2d::create(mProcessedSurface);
 		return mTexture;
 	}
 	TextureImage::~TextureImage(void) {
@@ -765,18 +776,20 @@ namespace VideoDromm {
 		mType = AUDIO;
 		initialized = false;
 		mName = "audio";
+
+		auto fmt = gl::Texture2d::Format().swizzleMask(GL_RED, GL_RED, GL_RED, GL_ONE).internalFormat(GL_RED);
 		for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
-		mTexture = gl::Texture::create(dTexture, 0x1909, 512, 2); //#define GL_LUMINANCE 0x1909
+		mTexture = gl::Texture::create(dTexture, GL_RED, 512, 2, fmt);
 
 		mVDAnimation->controlValues[13] = 1.0f; //audioMultFactor
 		/*mData = new float[1024];
 		for (int i = 0; i < 1024; i++)
 		{
-			mData[i] = 0;
+		mData[i] = 0;
 		}
 		for (int i = 0; i < 4; i++)
 		{
-			iFreqs[i] = i;
+		iFreqs[i] = i;
 		}*/
 	}
 	XmlTree	TextureAudio::toXml() const {
@@ -796,8 +809,9 @@ namespace VideoDromm {
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
 		mVDAnimation->mUseLineIn = xml.getAttributeValue<bool>("uselinein", "true");
+		auto fmt = gl::Texture2d::Format().swizzleMask(GL_RED, GL_RED, GL_RED, GL_ONE).internalFormat(GL_RED);
 		for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
-		mTexture = gl::Texture::create(dTexture, 0x1909, 512, 2); //#define GL_LUMINANCE 0x1909
+		mTexture = gl::Texture::create(dTexture, GL_RED, 512, 2, fmt); 
 	}
 	void TextureAudio::loadFromFullPath(string aPath)
 	{
@@ -830,6 +844,7 @@ namespace VideoDromm {
 
 	ci::gl::Texture2dRef TextureAudio::getTexture() {
 
+		auto fmt = gl::Texture2d::Format().swizzleMask(GL_RED, GL_RED, GL_RED, GL_ONE).internalFormat(GL_RED);
 		if (!initialized) {
 			CI_LOG_V("TextureAudio::getTexture() init");
 			auto ctx = audio::Context::master();
@@ -903,15 +918,14 @@ namespace VideoDromm {
 						break;
 					}
 				}
-				// store it as a 512x2 texture in UPDATE only!!
-				auto fmt = gl::Texture2d::Format().swizzleMask(GL_RED, GL_RED, GL_RED, GL_ONE).internalFormat(GL_RED);
-				mTexture = gl::Texture::create(signal, GL_RED, 512, 2, fmt); //#define GL_LUMINANCE 0x1909
+				// store it as a 512x2 texture
+				mTexture = gl::Texture::create(signal, GL_RED, 512, 2, fmt);
 			}
 		}
 		else {
-		// generate random values
+			// generate random values
 			for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
-			mTexture = gl::Texture::create(dTexture, GL_RGBA, 512, 2); //#define GL_LUMINANCE 0x1909
+			mTexture = gl::Texture::create(dTexture, GL_RED, 512, 2, fmt);
 		}
 
 		return mTexture;

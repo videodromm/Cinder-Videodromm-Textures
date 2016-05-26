@@ -86,6 +86,11 @@ namespace VideoDromm
 		static void						writeSettings(const VDTextureList &vdtexturelist, const ci::DataTargetRef &target);
 		virtual void					loadFromFullPath(string aPath);
 		string							getStatus() { return mStatus; };
+		//! area to display
+		void							setXLeft(int aXleft) { mXLeft = aXleft; };
+		void							setYTop(int aYTop) { mYTop = aYTop; };
+		void							setXRight(int aXRight) { mXLeft = aXRight; };
+		void							setYBottom(int aYBottom) { mYBottom = aYBottom; };
 	protected:
 
 		std::string						mName;
@@ -97,9 +102,12 @@ namespace VideoDromm
 		unsigned int 					mWidth;
 		unsigned int					mHeight;
 		std::string						mStatus;
-		//float							mIntensity;
 		//! Texture
 		ci::gl::Texture2dRef			mTexture;
+		//! Surface
+		Surface							mInputSurface;
+		Surface							mProcessedSurface;
+		int								mXLeft, mYTop, mXRight, mYBottom;
 	private:
 
 	};
