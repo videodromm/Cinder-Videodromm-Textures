@@ -91,6 +91,10 @@ namespace VideoDromm
 		void							setYTop(int aYTop) { mYTop = aYTop; };
 		void							setXRight(int aXRight) { mXLeft = aXRight; };
 		void							setYBottom(int aYBottom) { mYBottom = aYBottom; };
+		int								getXLeft() { return mXLeft; };
+		int								getYTop() { return mYTop; };
+		int								getXRight() { return mXRight; };
+		int								getYBottom() { return mYBottom; };
 	protected:
 
 		std::string						mName;

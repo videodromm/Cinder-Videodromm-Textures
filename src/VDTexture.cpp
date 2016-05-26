@@ -16,6 +16,10 @@ namespace VideoDromm {
 		, mWidth(640)
 		, mHeight(480)
 	{
+		mXLeft = 0;
+		mYTop = 0;
+		mXRight = mWidth;
+		mYBottom = mHeight;
 		if (mName.length() == 0) {
 			mName = mPath;
 		}
