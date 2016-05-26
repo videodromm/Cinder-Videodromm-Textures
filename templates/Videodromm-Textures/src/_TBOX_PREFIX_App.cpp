@@ -75,6 +75,15 @@ void _TBOX_PREFIX_App::fileDrop(FileDropEvent event)
 
 	if (ext == "wav" || ext == "mp3")
 	{
+		for (auto tex : mTexs)
+		{
+			if (!found) {
+				if (tex->getType() == VDTexture::AUDIO) {
+					tex->loadFromFullPath(mFile);
+					found = true;
+				}
+			}
+		}
 	}
 	else if (ext == "png" || ext == "jpg")
 	{

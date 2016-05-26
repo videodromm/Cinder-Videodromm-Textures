@@ -827,9 +827,6 @@ namespace VideoDromm {
 			CI_LOG_W("could not open wavefile");
 		}
 	}
-	/*float TextureAudio::getIntensity() {
-		return mIntensity; 
-	}*/
 
 	ci::gl::Texture2dRef TextureAudio::getTexture() {
 
@@ -842,7 +839,7 @@ namespace VideoDromm {
 				mLineIn = ctx->createInputDeviceNode(); //crashes if linein is present but disabled, doesn't go to catch block
 				CI_LOG_V("mic/line in opened");
 
-				auto scopeLineInFmt = audio::MonitorSpectralNode::Format().fftSize(512).windowSize(256);
+				auto scopeLineInFmt = audio::MonitorSpectralNode::Format().fftSize(512).windowSize(512);
 				mMonitorLineInSpectralNode = ctx->makeNode(new audio::MonitorSpectralNode(scopeLineInFmt));
 				mLineIn >> mMonitorLineInSpectralNode;
 				mLineIn->enable();
@@ -907,8 +904,14 @@ namespace VideoDromm {
 					}
 				}
 				// store it as a 512x2 texture in UPDATE only!!
-				mTexture = gl::Texture::create(signal, 0x1909, 512, 2); //#define GL_LUMINANCE 0x1909
+				auto fmt = gl::Texture2d::Format().swizzleMask(GL_RED, GL_RED, GL_RED, GL_ONE).internalFormat(GL_RED);
+				mTexture = gl::Texture::create(signal, GL_RED, 512, 2, fmt); //#define GL_LUMINANCE 0x1909
 			}
+		}
+		else {
+		// generate random values
+			for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
+			mTexture = gl::Texture::create(dTexture, GL_RGBA, 512, 2); //#define GL_LUMINANCE 0x1909
 		}
 
 		return mTexture;
