@@ -305,6 +305,7 @@ namespace VideoDromm {
 		mTexture = gl::Texture2d::create(mProcessedSurface);
 		return mTexture;
 	}
+
 	TextureImage::~TextureImage(void) {
 	}
 
@@ -616,6 +617,9 @@ namespace VideoDromm {
 			mLoopVideo = (mMovie->getDuration() < 30.0f);
 			mMovie->setLoop(mLoopVideo);
 			mMovie->play();
+			mWidth = mMovie->getWidth();
+			mHeight = mMovie->getHeight();
+			mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
 		}
 		catch (ci::Exception &e)
 		{
@@ -626,6 +630,14 @@ namespace VideoDromm {
 	}
 	ci::gl::Texture2dRef TextureMovie::getTexture() {
 		if (mMovie) {
+			//mTexture = ci::gl::Texture::create(ci::loadImage(mPath), ci::gl::Texture::Format().loadTopDown(mTopDown));
+			/* not working mInputSurface = Surface(mMovie->getTexture());
+			Area area(mXLeft, mYTop, mXRight, mYBottom);
+			mProcessedSurface = mInputSurface.clone(area);
+			mTexture = gl::Texture2d::create(mProcessedSurface);*/
+
+
+
 			mTexture = mMovie->getTexture();
 		}
 		return mTexture;
