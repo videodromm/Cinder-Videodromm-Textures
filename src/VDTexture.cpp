@@ -636,20 +636,15 @@ namespace VideoDromm {
 	}
 	ci::gl::Texture2dRef TextureMovie::getTexture() {
 		if (mMovie) {
-			//mTexture = ci::gl::Texture::create(ci::loadImage(mPath), ci::gl::Texture::Format().loadTopDown(mTopDown));
-			/* not working mInputSurface = Surface(mMovie->getTexture());
-			Area area(mXLeft, mYTop, mXRight, mYBottom);
-			mProcessedSurface = mInputSurface.clone(area);
-			mTexture = gl::Texture2d::create(mProcessedSurface);*/
-
-
-
 			mTexture = mMovie->getTexture();
+			// if codec is not recognized the texture is empty, return an initialized texture
+			if (!mTexture) {
+				mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
+			}
 		}
 		return mTexture;
 	}
 	TextureMovie::~TextureMovie(void) {
-
 	}
 
 	/*
@@ -669,8 +664,7 @@ namespace VideoDromm {
 			CI_LOG_EXCEPTION("Failed to init capture ", exc);
 		}
 	}
-	void TextureCamera::fromXml(const XmlTree &xml)
-	{
+	void TextureCamera::fromXml(const XmlTree &xml) {
 		// init		
 		mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
 		// retrieve attributes specific to this type of texture
@@ -698,8 +692,7 @@ namespace VideoDromm {
 		}
 		return mTexture;
 	}
-	void TextureCamera::printDevices()
-	{
+	void TextureCamera::printDevices() {
 		for (const auto &device : Capture::getDevices()) {
 			console() << "Device: " << device->getName() << " "
 #if defined( CINDER_COCOA_TOUCH )
