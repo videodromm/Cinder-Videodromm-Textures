@@ -51,7 +51,11 @@ void _TBOX_PREFIX_App::setup()
 	// Animation
 	mVDAnimation = VDAnimation::create(mVDSettings, mVDSession);
 	// initialize 
+#if (defined(  CINDER_MSW) )
 	mTexturesFilepath = getAssetPath("") / "defaulttextures.xml";
+#else
+	mTexturesFilepath = getAssetPath("") / "defaulttexturesquicktime.xml";
+#endif
 	if (fs::exists(mTexturesFilepath)) {
 		// load textures from file if one exists
 		mTexs = VDTexture::readSettings(mVDAnimation, loadFile(mTexturesFilepath));

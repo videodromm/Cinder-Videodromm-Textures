@@ -10,6 +10,7 @@
 	url="https://github.com/Videodromm/Cinder-Videodromm-Textures"
 	git="git://github.com/Videodromm/Cinder-Videodromm-Textures.git"
 	>
+	<requires>com.videodromm.Videodromm</requires>
 	<supports os="msw" />
   	<supports os="macosx" />
     <supports os="ios" />
