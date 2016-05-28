@@ -7,6 +7,7 @@
 	<asset>assets/passthru.vert</asset>
 	<asset>assets/passthru.frag</asset>
 	<asset>assets/defaulttextures.xml</asset>
+	<asset>assets/defaulttexturesquicktime.xml</asset>
 	<asset>assets/pupilles640x480.hap.mov</asset>
 	<asset>assets/fingers.mov</asset>
 	<asset>assets/mandalas/p0001.jpg</asset>
