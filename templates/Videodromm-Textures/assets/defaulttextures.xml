@@ -13,7 +13,7 @@
 		<details path="0.jpg" width="640" height="480" topdown="1"/>
 	</texture>
 	<texture id="5" texturetype="audio">
-		<details path="" width="640" height="480" uselinein="0" topdown="1"/>
+		<details path="" width="640" height="480" uselinein="1" topdown="1"/>
 	</texture>
 </textures>
 
