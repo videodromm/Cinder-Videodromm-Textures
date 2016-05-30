@@ -225,7 +225,9 @@ namespace VideoDromm {
 			mYTop = mYBottom - mAreaHeight;
 		}	
 	};
-
+	void VDTexture::toggleTopDown() { 
+		mTopDown = !mTopDown;
+	};
 	int VDTexture::getTextureWidth() {
 		return mWidth;
 	};
@@ -275,7 +277,7 @@ namespace VideoDromm {
 	{
 		VDTexture::fromXml(xml);
 		// retrieve attributes specific to this type of texture
-		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
+		mTopDown = xml.getAttributeValue<bool>("topdown", "true"); // default true
 		mPath = xml.getAttributeValue<string>("path", "");
 		mName = mPath;
 		if (mPath.length() > 0) {
@@ -303,8 +305,9 @@ namespace VideoDromm {
 
 	ci::gl::Texture2dRef TextureImage::getTexture() {
 		Area area(mXLeft, mYTop, mXRight, mYBottom);
+		//Area area(mXLeft, mYBottom, mXRight, mYTop/2);
 		mProcessedSurface = mInputSurface.clone(area);
-		mTexture = gl::Texture2d::create(mProcessedSurface);
+		mTexture = gl::Texture2d::create(mProcessedSurface, ci::gl::Texture::Format().loadTopDown(mTopDown));
 		return mTexture;
 	}
 
