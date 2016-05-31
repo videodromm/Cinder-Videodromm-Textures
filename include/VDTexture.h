@@ -96,7 +96,10 @@ namespace VideoDromm
 		int								getYTop() { return mYTop; };
 		int								getXRight() { return mXRight; };
 		int								getYBottom() { return mYBottom; };
+		bool							isTopDown();
 		void							toggleTopDown();
+		bool							getLockBounds();
+		void							toggleLockBounds();
 	protected:
 		std::string						mName;
 		bool							mFlipV;

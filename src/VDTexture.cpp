@@ -225,9 +225,18 @@ namespace VideoDromm {
 		if (mBoundsLocked) {
 			mYTop = mYBottom - mAreaHeight;
 		}	
-	};
+	}
+	bool VDTexture::isTopDown() {
+		return mTopDown;
+	}
 	void VDTexture::toggleTopDown() { 
 		mTopDown = !mTopDown;
+	}
+	bool VDTexture::getLockBounds() {
+		return mBoundsLocked;
+	}
+	void VDTexture::toggleLockBounds() {
+		mBoundsLocked = !mBoundsLocked;
 	};
 	int VDTexture::getTextureWidth() {
 		return mWidth;
