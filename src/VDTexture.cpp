@@ -23,6 +23,7 @@ namespace VideoDromm {
 		mYBottom = mHeight;
 		mAreaWidth = mWidth;
 		mAreaHeight = mHeight;
+		mFolder = "";
 		if (mName.length() == 0) {
 			mName = mPath;
 		}
@@ -279,14 +280,14 @@ namespace VideoDromm {
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "true"); // default true
 		mPath = xml.getAttributeValue<string>("path", "");
+		mFolder = xml.getAttributeValue<string>("folder", "");
 		mName = mPath;
 		if (mPath.length() > 0) {
-			fs::path fullPath = getAssetPath("") / mPath;// TODO / mVDSettings->mAssetsPath
+			fs::path fullPath = getAssetPath("") / mFolder / mPath;
 			if (fs::exists(fullPath)) {
 				// TODO mTopDown has no effect!?!
-				mTexture = ci::gl::Texture::create(loadImage(loadAsset(mPath)), ci::gl::Texture::Format().loadTopDown(mTopDown));
-				mInputSurface = Surface(loadImage(loadAsset(mPath)));
-
+				mTexture = ci::gl::Texture::create(loadImage(fullPath), ci::gl::Texture::Format().loadTopDown(mTopDown)); //loadAsset(mPath)
+				mInputSurface = Surface(loadImage(fullPath));
 			}
 			else {
 				mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));

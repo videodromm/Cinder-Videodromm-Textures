@@ -103,6 +103,7 @@ namespace VideoDromm
 		bool							mFlipH;
 		TextureType						mType;
 		std::string						mPath;
+		std::string						mFolder;
 		bool							mTopDown;
 		unsigned int 					mWidth;
 		unsigned int					mHeight;
