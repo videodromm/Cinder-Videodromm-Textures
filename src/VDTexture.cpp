@@ -19,8 +19,8 @@ namespace VideoDromm {
 		mBoundsLocked = true;
 		mXLeft = 0;
 		mYTop = 0;
-		mXRight = mWidth;
-		mYBottom = mHeight;
+		mXRight = mOriginalWidth = mWidth;
+		mYBottom = mOriginalHeight = mHeight;
 		mAreaWidth = mWidth;
 		mAreaHeight = mHeight;
 		mFolder = "";
@@ -238,14 +238,19 @@ namespace VideoDromm {
 	void VDTexture::toggleLockBounds() {
 		mBoundsLocked = !mBoundsLocked;
 	};
-	int VDTexture::getTextureWidth() {
+	unsigned int VDTexture::getTextureWidth() {
 		return mWidth;
 	};
 
-	int VDTexture::getTextureHeight() {
+	unsigned int VDTexture::getTextureHeight() {
 		return mHeight;
 	};
-
+	unsigned int VDTexture::getOriginalWidth() {
+		return mOriginalWidth;
+	};
+	unsigned int VDTexture::getOriginalHeight() {
+		return mOriginalHeight;
+	};
 	ci::ivec2 VDTexture::getSize() {
 		return mTexture->getSize();
 	}
@@ -293,29 +298,26 @@ namespace VideoDromm {
 		mName = mPath;
 		if (mPath.length() > 0) {
 			fs::path fullPath = getAssetPath("") / mFolder / mPath;
-			if (fs::exists(fullPath)) {
-				// TODO mTopDown has no effect!?!
-				mTexture = ci::gl::Texture::create(loadImage(fullPath), ci::gl::Texture::Format().loadTopDown(mTopDown)); //loadAsset(mPath)
-				mInputSurface = Surface(loadImage(fullPath));
-			}
-			else {
-				mTexture = ci::gl::Texture::create(mWidth, mHeight, ci::gl::Texture::Format().loadTopDown(mTopDown));
-				mInputSurface = Surface(mWidth, mHeight, true);
-			}
-			mXLeft = 0;
-			mYTop = 0;
-			mXRight = mTexture->getWidth();
-			mYBottom = mTexture->getHeight();
+			loadFromFullPath(fullPath.string());			
 		}
 	}
 	void TextureImage::loadFromFullPath(string aPath) {
-		mTexture = ci::gl::Texture::create(loadImage(aPath), ci::gl::Texture::Format().loadTopDown(mTopDown));
-		mName = aPath;
+		if (fs::exists(aPath)) {
+			mTexture = ci::gl::Texture::create(loadImage(aPath)); //loadAsset(mPath)
+			mInputSurface = Surface(loadImage(aPath));
+		}
+		else {
+			mTexture = ci::gl::Texture::create(mWidth, mHeight);
+			mInputSurface = Surface(mWidth, mHeight, true);
+		}
+		mXLeft = 0;
+		mYTop = 0;
+		mXRight = mOriginalWidth = mTexture->getWidth();
+		mYBottom = mOriginalHeight = mTexture->getHeight();
 	}
 
 	ci::gl::Texture2dRef TextureImage::getTexture() {
 		Area area(mXLeft, mYTop, mXRight, mYBottom);
-		//Area area(mXLeft, mYBottom, mXRight, mYTop/2);
 		mProcessedSurface = mInputSurface.clone(area);
 		mTexture = gl::Texture2d::create(mProcessedSurface, ci::gl::Texture::Format().loadTopDown(mTopDown));
 		return mTexture;

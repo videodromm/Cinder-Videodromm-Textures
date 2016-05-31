@@ -74,8 +74,10 @@ namespace VideoDromm
 		std::string						getName();
 		bool							isFlipH() { return mFlipH; };
 		bool							isFlipV() { return mFlipV; };
-		int								getTextureWidth();
-		int								getTextureHeight();
+		unsigned int					getTextureWidth();
+		unsigned int					getTextureHeight();
+		unsigned int					getOriginalWidth();
+		unsigned int					getOriginalHeight();
 		//!
 		virtual void					fromXml(const ci::XmlTree &xml);
 		//!
@@ -118,7 +120,7 @@ namespace VideoDromm
 		//! Surface
 		Surface							mInputSurface;
 		Surface							mProcessedSurface;
-		int								mXLeft, mYTop, mXRight, mYBottom;
+		int								mXLeft, mYTop, mXRight, mYBottom, mOriginalWidth, mOriginalHeight;
 		bool							mBoundsLocked;
 	private:
 
