@@ -20,9 +20,6 @@ public:
 	void						fileDrop(FileDropEvent event) override;
 	void						cleanup() override;
 private:
-	// Log
-	VDLogRef					mVDLog;
-
 	VDTextureList				mTexs;
 	fs::path					mTexturesFilepath;
 	int							i, x;

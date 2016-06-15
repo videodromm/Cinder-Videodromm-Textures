@@ -596,6 +596,7 @@ namespace VideoDromm {
 	/*
 	** ---- TextureMovie ------------------------------------------------
 	*/
+#if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
 	TextureMovie::TextureMovie() {
 		mType = MOVIE;
 
@@ -661,7 +662,7 @@ namespace VideoDromm {
 	}
 	TextureMovie::~TextureMovie(void) {
 	}
-
+#endif
 	/*
 	** ---- TextureCamera ------------------------------------------------
 	*/
