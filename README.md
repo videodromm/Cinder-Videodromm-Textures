@@ -1,4 +1,6 @@
 Cinder-Videodromm-Textures
 ===============
 
-use this block to compile projects from Videodromm organization on github
+this block has been moved to Cinder-Videodromm block.
+
+it's still useable for raspberry pi, linux and to test basic Textures
