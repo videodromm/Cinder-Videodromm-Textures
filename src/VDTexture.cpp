@@ -726,6 +726,7 @@ namespace VideoDromm {
 	/*
 	** ---- TextureShared ------------------------------------------------
 	*/
+#if (defined(  CINDER_MSW) ) || (defined( CINDER_MAC ))
 	TextureShared::TextureShared() {
 		mType = SHARED;
 #if defined( CINDER_MSW )
@@ -832,7 +833,7 @@ namespace VideoDromm {
 #endif
 
 	}
-
+#endif
 	/*
 	** ---- TextureAudio ------------------------------------------------
 	*/
