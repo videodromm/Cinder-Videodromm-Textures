@@ -23,9 +23,6 @@
 #include "cinderSyphon.h"
 #endif
 
-// Settings
-#include "VDAnimation.h"
-
 // audio
 #include "cinder/audio/Context.h"
 #include "cinder/audio/MonitorNode.h"
@@ -83,7 +80,7 @@ namespace VideoDromm
 		//!
 		virtual XmlTree					toXml() const;
 		//! read a xml file and pass back a vector of VDTextures
-		static VDTextureList			readSettings(VDAnimationRef aVDAnimation, const ci::DataSourceRef &source);
+		static VDTextureList			readSettings(const ci::DataSourceRef &source);
 		//! write a xml file
 		static void						writeSettings(const VDTextureList &vdtexturelist, const ci::DataTargetRef &target);
 		virtual void					loadFromFullPath(string aPath);
@@ -331,7 +328,7 @@ namespace VideoDromm
 		: public VDTexture {
 	public:
 		//
-		static TextureAudioRef	create(VDAnimationRef aVDAnimation) { return std::make_shared<TextureAudio>(aVDAnimation); }
+		static TextureAudioRef	create() { return std::make_shared<TextureAudio>(); }
 		//!
 		void					fromXml(const XmlTree &xml) override;
 		//!
@@ -340,7 +337,7 @@ namespace VideoDromm
 		virtual void			loadFromFullPath(string aPath) override;
 
 	public:
-		TextureAudio(VDAnimationRef aVDAnimation);
+		TextureAudio();
 		virtual ~TextureAudio(void);
 
 		//! returns a shared pointer 
@@ -350,8 +347,6 @@ namespace VideoDromm
 		virtual ci::gl::Texture2dRef	getTexture() override;
 		//float							getIntensity() override;
 	private:
-		// Animation
-		VDAnimationRef					mVDAnimation;
 		// init
 		bool							initialized;
 		// audio
@@ -370,6 +365,8 @@ namespace VideoDromm
 		// textures
 		unsigned char					dTexture[1024];
 		ci::gl::Texture2dRef			mTexture;
-
+		// audio specific
+		bool 							mUseLineIn;
+		float							maxVolume;
 	};
 }

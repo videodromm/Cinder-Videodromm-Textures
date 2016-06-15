@@ -40,7 +40,7 @@ namespace VideoDromm {
 	VDTexture::~VDTexture(void) {
 
 	}
-	VDTextureList VDTexture::readSettings(VDAnimationRef aVDAnimation, const DataSourceRef &source)
+	VDTextureList VDTexture::readSettings(const DataSourceRef &source)
 	{
 		XmlTree			doc;
 		VDTextureList	vdtexturelist;
@@ -109,7 +109,7 @@ namespace VideoDromm {
 #endif
 				}
 				else if (texturetype == "audio") {
-					TextureAudioRef t(new TextureAudio(aVDAnimation));
+					TextureAudioRef t(new TextureAudio());
 					t->fromXml(detailsXml);
 					vdtexturelist.push_back(t);
 				}
@@ -835,8 +835,8 @@ namespace VideoDromm {
 	/*
 	** ---- TextureAudio ------------------------------------------------
 	*/
-	TextureAudio::TextureAudio(VDAnimationRef aVDAnimation) {
-		mVDAnimation = aVDAnimation;
+	TextureAudio::TextureAudio() {
+		
 		mType = AUDIO;
 		initialized = false;
 		mName = "audio";
@@ -845,16 +845,6 @@ namespace VideoDromm {
 		for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
 		mTexture = gl::Texture::create(dTexture, GL_RED, 512, 2, fmt);
 
-		mVDAnimation->controlValues[13] = 1.0f; //audioMultFactor
-		/*mData = new float[1024];
-		for (int i = 0; i < 1024; i++)
-		{
-		mData[i] = 0;
-		}
-		for (int i = 0; i < 4; i++)
-		{
-		iFreqs[i] = i;
-		}*/
 	}
 	XmlTree	TextureAudio::toXml() const {
 		XmlTree xml = VDTexture::toXml();
@@ -862,7 +852,7 @@ namespace VideoDromm {
 		// add attributes specific to this type of texture
 		xml.setAttribute("path", mPath);
 		xml.setAttribute("topdown", mTopDown);
-		xml.setAttribute("uselinein", mVDAnimation->mUseLineIn);
+		xml.setAttribute("uselinein", mUseLineIn);
 
 		return xml;
 	}
@@ -872,8 +862,8 @@ namespace VideoDromm {
 		VDTexture::fromXml(xml);
 		// retrieve attributes specific to this type of texture
 		mTopDown = xml.getAttributeValue<bool>("topdown", "false");
-		mVDAnimation->mUseLineIn = xml.getAttributeValue<bool>("uselinein", "true");
-		mName = (mVDAnimation->mUseLineIn) ? "line in" : "wave";
+		mUseLineIn = xml.getAttributeValue<bool>("uselinein", "true");
+		mName = (mUseLineIn) ? "line in" : "wave";
 		auto fmt = gl::Texture2d::Format().swizzleMask(GL_RED, GL_RED, GL_RED, GL_ONE).internalFormat(GL_RED);
 		for (int i = 0; i < 1024; ++i) dTexture[i] = (unsigned char)(Rand::randUint() & 0xFF);
 		mTexture = gl::Texture::create(dTexture, GL_RED, 512, 2, fmt); 
@@ -899,7 +889,7 @@ namespace VideoDromm {
 				filePlayer->setSourceFile(mSourceFile);
 
 				mSamplePlayerNode->start();
-				mVDAnimation->mUseLineIn = false;
+				mUseLineIn = false;
 			}
 		}
 		catch (...) {
@@ -913,7 +903,7 @@ namespace VideoDromm {
 		if (!initialized) {
 			CI_LOG_V("TextureAudio::getTexture() init");
 			auto ctx = audio::Context::master();
-			if (mVDAnimation->mUseLineIn) {
+			if (mUseLineIn) {
 				// linein
 				CI_LOG_W("trying to open mic/line in, if no line follows in the log, the app crashed so put UseLineIn to false in the textures.xml file");
 				mLineIn = ctx->createInputDeviceNode(); //crashes if linein is present but disabled, doesn't go to catch block
@@ -932,7 +922,7 @@ namespace VideoDromm {
 			initialized = true;
 		}
 
-		if (mVDAnimation->mUseLineIn) {
+		if (mUseLineIn) {
 			mMagSpectrum = mMonitorLineInSpectralNode->getMagSpectrum();
 		}
 		else {
@@ -942,46 +932,22 @@ namespace VideoDromm {
 		if (!mMagSpectrum.empty()) {
 
 			unsigned char signal[kBands];
-			mVDAnimation->maxVolume = 0.0f;//mIntensity
+			maxVolume = 0.0f;//mIntensity
 			size_t mDataSize = mMagSpectrum.size();
 			if (mDataSize > 0 && mDataSize < 2048) {
 				float db;
 				for (size_t i = 0; i < mDataSize; i++) {
 					float f = mMagSpectrum[i];
 					db = audio::linearToDecibel(f);
-					f = db *mVDAnimation->controlValues[13];// audioMultFactor;
-					if (f > mVDAnimation->maxVolume)
+					f = db;
+					if (f > maxVolume)
 					{
-						mVDAnimation->maxVolume = f;
+						maxVolume = f;
 					}
 					//mData[i] = f;
 					int ger = f;
 					signal[i] = static_cast<unsigned char>(ger);
-					switch (i) {
-					case 11:
-						mVDAnimation->iFreqs[0] = f;
-						break;
-					case 13:
-						mVDAnimation->iFreqs[1] = f;
-						break;
-					case 15:
-						mVDAnimation->iFreqs[2] = f;
-						break;
-					case 18:
-						mVDAnimation->iFreqs[3] = f;
-						break;
-					case 25:
-						mVDAnimation->iFreqs[4] = f;
-						break;
-					case 30:
-						mVDAnimation->iFreqs[5] = f;
-						break;
-					case 35:
-						mVDAnimation->iFreqs[6] = f;
-						break;
-					default:
-						break;
-					}
+					
 				}
 				// store it as a 512x2 texture
 				mTexture = gl::Texture::create(signal, GL_RED, 512, 2, fmt);
